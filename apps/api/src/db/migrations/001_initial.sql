@@ -237,3 +237,10 @@ CREATE TABLE documents (
 );
 
 CREATE INDEX idx_documents_matter ON documents (matter_id);
+
+-- Performance indexes for primary query patterns
+CREATE INDEX idx_matters_client      ON matters (client_id);
+CREATE INDEX idx_matters_status      ON matters (status);
+CREATE INDEX idx_cal_events_date     ON calendar_events (date);
+CREATE INDEX idx_cal_events_matter   ON calendar_events (matter_id);
+CREATE INDEX idx_notifications_user  ON notifications (user_id, is_read);
