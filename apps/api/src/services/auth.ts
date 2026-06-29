@@ -77,8 +77,23 @@ export async function refresh(refreshToken: string): Promise<AuthTokens> {
   const newAccessToken = signAccessToken(payload.sub, userRow.role)
   const newRefreshToken = signRefreshToken(payload.sub)
 
-  await db.query('DELETE FROM refresh_tokens WHERE token_hash = $1', [hash])
-  await storeRefreshToken(payload.sub, newRefreshToken)
+  const rotateClient = await db.connect()
+  try {
+    await rotateClient.query('BEGIN')
+    await rotateClient.query('DELETE FROM refresh_tokens WHERE token_hash = $1', [hash])
+    const newHash = crypto.createHash('sha256').update(newRefreshToken).digest('hex')
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+    await rotateClient.query(
+      'INSERT INTO refresh_tokens (user_id, token_hash, expires_at) VALUES ($1, $2, $3)',
+      [payload.sub, newHash, expiresAt],
+    )
+    await rotateClient.query('COMMIT')
+  } catch (err) {
+    await rotateClient.query('ROLLBACK').catch(() => {})
+    throw err
+  } finally {
+    rotateClient.release()
+  }
 
   return { accessToken: newAccessToken, refreshToken: newRefreshToken }
 }
@@ -121,18 +136,19 @@ export async function requestPasswordReset(email: string): Promise<void> {
 
 export async function confirmPasswordReset(token: string, newPassword: string): Promise<void> {
   const hash = crypto.createHash('sha256').update(token).digest('hex')
-  const { rows } = await db.query(
-    `SELECT pr.id, pr.user_id FROM password_resets pr
-     WHERE pr.token_hash = $1 AND pr.expires_at > now() AND pr.used_at IS NULL`,
-    [hash],
-  )
-  const row = rows[0] as { id: string; user_id: string } | undefined
-  if (!row) throw createError('Invalid or expired reset token', 400, 'INVALID_RESET_TOKEN')
-
   const passwordHash = await hashPassword(newPassword)
   const client = await db.connect()
   try {
     await client.query('BEGIN')
+    // SELECT FOR UPDATE locks the row — concurrent request must wait, preventing TOCTOU
+    const { rows } = await client.query(
+      `SELECT pr.id, pr.user_id FROM password_resets pr
+       WHERE pr.token_hash = $1 AND pr.expires_at > now() AND pr.used_at IS NULL
+       FOR UPDATE`,
+      [hash],
+    )
+    const row = rows[0] as { id: string; user_id: string } | undefined
+    if (!row) throw createError('Invalid or expired reset token', 400, 'INVALID_RESET_TOKEN')
     await client.query('UPDATE users SET password_hash = $1, updated_at = now() WHERE id = $2', [
       passwordHash,
       row.user_id,
@@ -142,7 +158,7 @@ export async function confirmPasswordReset(token: string, newPassword: string): 
     await client.query('DELETE FROM refresh_tokens WHERE user_id = $1', [row.user_id])
     await client.query('COMMIT')
   } catch (err) {
-    await client.query('ROLLBACK')
+    await client.query('ROLLBACK').catch(() => {})
     throw err
   } finally {
     client.release()
@@ -187,18 +203,22 @@ export async function acceptInvite(
   password: string,
 ): Promise<{ tokens: AuthTokens; user: User }> {
   const hash = crypto.createHash('sha256').update(token).digest('hex')
-  const { rows } = await db.query(
-    `SELECT ui.id, ui.user_id FROM user_invites ui
-     WHERE ui.token_hash = $1 AND ui.expires_at > now() AND ui.accepted_at IS NULL`,
-    [hash],
-  )
-  const row = rows[0] as { id: string; user_id: string } | undefined
-  if (!row) throw createError('Invalid or expired invite token', 400, 'INVALID_INVITE_TOKEN')
-
-  const passwordHash = await hashPassword(password)
+  let userId: string | undefined
   const client = await db.connect()
   try {
     await client.query('BEGIN')
+    // SELECT FOR UPDATE locks the row — concurrent request must wait, preventing TOCTOU
+    const { rows } = await client.query(
+      `SELECT ui.id, ui.user_id FROM user_invites ui
+       WHERE ui.token_hash = $1 AND ui.expires_at > now() AND ui.accepted_at IS NULL
+       FOR UPDATE`,
+      [hash],
+    )
+    const row = rows[0] as { id: string; user_id: string } | undefined
+    if (!row) throw createError('Invalid or expired invite token', 400, 'INVALID_INVITE_TOKEN')
+
+    userId = row.user_id
+    const passwordHash = await hashPassword(password)
     await client.query(
       'UPDATE users SET password_hash = $1, updated_at = now() WHERE id = $2',
       [passwordHash, row.user_id],
@@ -206,13 +226,13 @@ export async function acceptInvite(
     await client.query('UPDATE user_invites SET accepted_at = now() WHERE id = $1', [row.id])
     await client.query('COMMIT')
   } catch (err) {
-    await client.query('ROLLBACK')
+    await client.query('ROLLBACK').catch(() => {})
     throw err
   } finally {
     client.release()
   }
 
-  const { rows: userRows } = await db.query('SELECT * FROM users WHERE id = $1', [row.user_id])
+  const { rows: userRows } = await db.query('SELECT * FROM users WHERE id = $1', [userId!])
   const user = toUser(userRows[0] as Record<string, unknown>)
   const accessToken = signAccessToken(user.id, user.role)
   const refreshToken = signRefreshToken(user.id)
