@@ -4,7 +4,7 @@ import helmet from 'helmet'
 import { rateLimit } from 'express-rate-limit'
 import { errorHandler, notFound } from './middleware/errorHandler.js'
 
-export function createApp() {
+export function createBaseApp() {
   const app = express()
 
   app.use(helmet())
@@ -30,8 +30,12 @@ export function createApp() {
     res.json({ status: 'ok' })
   })
 
+  return app
+}
+
+export function createApp() {
+  const app = createBaseApp()
   app.use(notFound)
   app.use(errorHandler)
-
   return app
 }
