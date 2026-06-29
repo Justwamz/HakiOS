@@ -40,7 +40,6 @@ services:
   - type: web
     name: hakios-web
     runtime: static
-    plan: free
     buildCommand: npm ci && npx turbo build --filter=@hakios/web
     staticPublishPath: ./apps/web/dist
     routes:
