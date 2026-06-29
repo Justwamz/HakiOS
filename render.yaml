@@ -11,7 +11,7 @@ services:
     runtime: node
     region: frankfurt
     plan: free
-    buildCommand: npm ci && npx turbo build --filter=@hakios/api
+    buildCommand: npm ci && npm run build -- --filter=@hakios/api
     startCommand: node apps/api/dist/migrate.js && node apps/api/dist/index.js
     healthCheckPath: /health
     envVars:
@@ -40,7 +40,7 @@ services:
   - type: web
     name: hakios-web
     runtime: static
-    buildCommand: npm ci && npx turbo build --filter=@hakios/web
+    buildCommand: npm ci && npm run build -- --filter=@hakios/web
     staticPublishPath: ./apps/web/dist
     routes:
       - type: rewrite
