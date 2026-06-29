@@ -3,6 +3,7 @@ import cors from 'cors'
 import helmet from 'helmet'
 import { rateLimit } from 'express-rate-limit'
 import { errorHandler, notFound } from './middleware/errorHandler.js'
+import { registerRoutes } from './routes/index.js'
 
 export function createBaseApp() {
   const app = express()
@@ -14,7 +15,6 @@ export function createBaseApp() {
   }))
   app.use(express.json())
 
-  // Auth routes are rate-limited more strictly (added in Plan 1b)
   app.use(
     '/auth',
     rateLimit({
@@ -29,6 +29,8 @@ export function createBaseApp() {
   app.get('/health', (_req, res) => {
     res.json({ status: 'ok' })
   })
+
+  registerRoutes(app)
 
   return app
 }
