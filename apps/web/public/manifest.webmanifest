@@ -1,0 +1,14 @@
+{
+  "name": "HakiOS Practice Management",
+  "short_name": "HakiOS",
+  "description": "Law firm practice management system",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f7f5f0",
+  "theme_color": "#0a5c3e",
+  "icons": [
+    { "src": "/icons/pwa-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/pwa-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
