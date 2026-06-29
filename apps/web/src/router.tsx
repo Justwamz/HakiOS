@@ -3,6 +3,7 @@ import { ProtectedRoute } from './components/ProtectedRoute'
 import { Layout } from './components/Layout'
 import { LoginPage } from './pages/auth/LoginPage'
 import { SetPasswordPage } from './pages/auth/SetPasswordPage'
+import { RequestResetPage } from './pages/auth/RequestResetPage'
 
 export const router = createBrowserRouter([
   {
@@ -16,6 +17,10 @@ export const router = createBrowserRouter([
   {
     path: '/auth/reset-password',
     element: <SetPasswordPage mode="reset" />,
+  },
+  {
+    path: '/auth/reset-password/request',
+    element: <RequestResetPage />,
   },
   {
     path: '/',

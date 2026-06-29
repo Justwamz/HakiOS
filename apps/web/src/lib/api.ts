@@ -46,7 +46,13 @@ async function getValidToken(): Promise<string | null> {
     const expiresAt = payload.exp * 1000
     if (expiresAt - Date.now() > 60_000) return accessToken
   } catch {
-    return accessToken
+    // Can't parse expiry — attempt a refresh rather than sending a potentially invalid token
+    if (!refreshPromise) {
+      refreshPromise = doRefresh().finally(() => {
+        refreshPromise = null
+      })
+    }
+    return refreshPromise
   }
 
   if (!refreshPromise) {

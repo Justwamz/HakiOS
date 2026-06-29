@@ -136,11 +136,9 @@ export async function requestPasswordReset(email: string): Promise<void> {
 
 export async function confirmPasswordReset(token: string, newPassword: string): Promise<void> {
   const hash = crypto.createHash('sha256').update(token).digest('hex')
-  const passwordHash = await hashPassword(newPassword)
   const client = await db.connect()
   try {
     await client.query('BEGIN')
-    // SELECT FOR UPDATE locks the row — concurrent request must wait, preventing TOCTOU
     const { rows } = await client.query(
       `SELECT pr.id, pr.user_id FROM password_resets pr
        WHERE pr.token_hash = $1 AND pr.expires_at > now() AND pr.used_at IS NULL
@@ -149,12 +147,13 @@ export async function confirmPasswordReset(token: string, newPassword: string): 
     )
     const row = rows[0] as { id: string; user_id: string } | undefined
     if (!row) throw createError('Invalid or expired reset token', 400, 'INVALID_RESET_TOKEN')
+
+    const passwordHash = await hashPassword(newPassword)
     await client.query('UPDATE users SET password_hash = $1, updated_at = now() WHERE id = $2', [
       passwordHash,
       row.user_id,
     ])
     await client.query('UPDATE password_resets SET used_at = now() WHERE id = $1', [row.id])
-    // Invalidate all refresh tokens for this user (per spec: reset invalidates all sessions)
     await client.query('DELETE FROM refresh_tokens WHERE user_id = $1', [row.user_id])
     await client.query('COMMIT')
   } catch (err) {

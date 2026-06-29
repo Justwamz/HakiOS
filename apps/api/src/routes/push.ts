@@ -34,7 +34,9 @@ pushRouter.post('/subscribe', requireAuth, async (req, res, next) => {
 
 pushRouter.delete('/subscribe', requireAuth, async (req, res, next) => {
   try {
-    const { endpoint } = z.object({ endpoint: z.string().url() }).parse(req.body)
+    const parsed = z.object({ endpoint: z.string().url() }).safeParse(req.body)
+    if (!parsed.success) throw createError('Invalid request body', 400)
+    const { endpoint } = parsed.data
     await db.query(
       'DELETE FROM push_subscriptions WHERE user_id = $1 AND endpoint = $2',
       [req.user!.id, endpoint],
