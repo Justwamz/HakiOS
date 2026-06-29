@@ -1,0 +1,29 @@
+/* Brand tokens as CSS custom properties — consumed via Tailwind config */
+:root {
+  --color-primary: #0a5c3e;
+  --color-primary-light: #2d7a4f;
+  --color-accent: #c49a28;
+  --color-accent-light: #e8c55a;
+  --color-background: #f7f5f0;
+  --color-surface: #ffffff;
+  --color-text-primary: #1e1e1a;
+  --color-text-secondary: #4a4a45;
+  --color-text-muted: #8a8a82;
+  --color-border: #e0ded8;
+  --color-status-overdue: #c0392b;
+  --color-status-urgent: #d4820a;
+  --color-status-upcoming: #1a6b9a;
+  --color-status-resolved: #2d7a4f;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-background: #141412;
+    --color-surface: #1e1e1a;
+    --color-text-primary: #f0ede6;
+    --color-text-secondary: #b0ada6;
+    --color-border: #2e2e28;
+    --color-primary: #1a8a5a;
+    --color-accent: #d4aa3a;
+  }
+}
