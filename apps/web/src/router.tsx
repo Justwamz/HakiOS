@@ -4,36 +4,18 @@ import { Layout } from './components/Layout'
 import { LoginPage } from './pages/auth/LoginPage'
 import { SetPasswordPage } from './pages/auth/SetPasswordPage'
 import { RequestResetPage } from './pages/auth/RequestResetPage'
+import { DashboardPage } from './pages/DashboardPage'
 
 export const router = createBrowserRouter([
-  {
-    path: '/auth/login',
-    element: <LoginPage />,
-  },
-  {
-    path: '/auth/setup-password',
-    element: <SetPasswordPage mode="invite" />,
-  },
-  {
-    path: '/auth/reset-password',
-    element: <SetPasswordPage mode="reset" />,
-  },
-  {
-    path: '/auth/reset-password/request',
-    element: <RequestResetPage />,
-  },
+  { path: '/auth/login', element: <LoginPage /> },
+  { path: '/auth/setup-password', element: <SetPasswordPage mode="invite" /> },
+  { path: '/auth/reset-password', element: <SetPasswordPage mode="reset" /> },
+  { path: '/auth/reset-password/request', element: <RequestResetPage /> },
   {
     path: '/',
-    element: (
-      <ProtectedRoute>
-        <Layout />
-      </ProtectedRoute>
-    ),
+    element: <ProtectedRoute><Layout /></ProtectedRoute>,
     children: [
-      {
-        index: true,
-        element: <div className="p-8 text-text-secondary">Dashboard — coming in Phase 2</div>,
-      },
+      { index: true, element: <DashboardPage /> },
     ],
   },
 ])
