@@ -16,7 +16,7 @@ export function createBaseApp() {
   app.use(express.json())
 
   app.use(
-    '/auth',
+    '/api/auth',
     rateLimit({
       windowMs: 15 * 60 * 1000,
       max: 5,

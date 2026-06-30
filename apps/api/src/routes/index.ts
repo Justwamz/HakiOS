@@ -6,9 +6,9 @@ import { mattersRouter } from './matters.js'
 import { usersRouter } from './users.js'
 
 export function registerRoutes(app: Express): void {
-  app.use('/auth', authRouter)
-  app.use('/push', pushRouter)
-  app.use('/clients', clientsRouter)
-  app.use('/matters', mattersRouter)
-  app.use('/users', usersRouter)
+  app.use('/api/auth', authRouter)
+  app.use('/api/push', pushRouter)
+  app.use('/api/clients', clientsRouter)
+  app.use('/api/matters', mattersRouter)
+  app.use('/api/users', usersRouter)
 }
