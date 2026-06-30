@@ -7,7 +7,6 @@ import { signAccessToken } from '../lib/jwt.js'
 
 const app = createApp()
 let adminId: string
-let clerkId: string
 let adminToken: string
 let clerkToken: string
 let createdClientId: string
@@ -29,8 +28,7 @@ beforeAll(async () => {
      ON CONFLICT (email) DO UPDATE SET password_hash = $1 RETURNING id`,
     [hash],
   )
-  clerkId = c[0]!.id
-  clerkToken = signAccessToken(clerkId, 'clerk')
+  clerkToken = signAccessToken(c[0]!.id, 'clerk')
 })
 
 afterAll(async () => {

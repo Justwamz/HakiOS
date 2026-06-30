@@ -52,7 +52,9 @@ async function nextClientSeq(year: number, pgClient: PoolClient): Promise<number
      RETURNING next_val - 1 AS seq`,
     [year],
   )
-  return rows[0]!.seq
+  const seq = rows[0]?.seq
+  if (seq === undefined) throw new Error('Sequence generation failed')
+  return seq
 }
 
 export async function listClients(opts: ListClientsOptions): Promise<PaginatedResult<Client>> {
@@ -145,7 +147,9 @@ export async function createClient(input: CreateClientInput, userId: string): Pr
         userId,
       ],
     )
-    const created = toClient(rows[0]!)
+    const row = rows[0]
+    if (!row) throw new Error('Insert did not return a row')
+    const created = toClient(row)
     await writeAuditLog(
       { userId, action: 'CREATE', recordType: 'client', recordId: created.id, afterValue: created },
       pgClient,
@@ -210,7 +214,9 @@ export async function updateClient(
       `UPDATE clients SET ${setClauses.join(', ')} WHERE id = $${i} RETURNING *`,
       vals,
     )
-    const after = toClient(rows[0]!)
+    const updatedRow = rows[0]
+    if (!updatedRow) throw new Error('Update did not return a row')
+    const after = toClient(updatedRow)
 
     await writeAuditLog(
       { userId, action: 'UPDATE', recordType: 'client', recordId: after.id, beforeValue: before, afterValue: after },

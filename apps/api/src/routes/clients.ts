@@ -68,11 +68,13 @@ clientsRouter.get('/:id', requireAuth, async (req, res, next) => {
   try {
     const user = req.user
     if (!user) return next(createError('Authentication required', 401, 'UNAUTHENTICATED'))
+    const canReadAll = hasPermission(user.role, 'clients:read_all')
+    const canReadAssigned = hasPermission(user.role, 'clients:read_assigned')
+    if (!canReadAll && !canReadAssigned) {
+      return next(createError('Insufficient permissions', 403, 'FORBIDDEN'))
+    }
     const client = await clientsService.getClient(req.params['id']!)
-    if (!hasPermission(user.role, 'clients:read_all')) {
-      if (!hasPermission(user.role, 'clients:read_assigned')) {
-        return next(createError('Insufficient permissions', 403, 'FORBIDDEN'))
-      }
+    if (!canReadAll) {
       const ok = await clientsService.userCanAccessClient(user.id, client.id)
       if (!ok) return next(createError('Insufficient permissions', 403, 'FORBIDDEN'))
     }
