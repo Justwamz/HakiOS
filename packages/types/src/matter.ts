@@ -67,3 +67,25 @@ export interface CreateMatterInput {
   nextAction?: string
   nextActionDue?: string
 }
+
+export interface UpdateMatterInput {
+  description?: string
+  leadAdvocateId?: string | null
+  supervisingPartnerId?: string | null
+  clerkIds?: string[]
+  opposingParty?: string | null
+  opposingAdvocate?: string | null
+  courtName?: string | null
+  courtStation?: string | null
+  courtDivision?: string | null
+  courtFileNumber?: string | null
+  judge?: string | null
+  nextAction?: string | null
+  nextActionDue?: string | null
+  status?: MatterStatus
+}
+
+export interface CloseMatterInput {
+  dateClosed?: string
+  closureNote?: string
+}
