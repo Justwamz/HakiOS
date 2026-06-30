@@ -1,11 +1,13 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, Navigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import type { Client } from '@hakios/types'
+import { hasPermission } from '@hakios/types'
 import { api } from '../../lib/api'
 import { PageHeader } from '../../components/PageHeader'
+import { useAuthStore } from '../../store/auth'
 
 const schema = z.object({
   fullName: z.string().min(1, 'Name is required'),
@@ -28,6 +30,10 @@ const LABEL_CLASS = 'block text-sm font-medium text-text-primary mb-1'
 export function ClientEditPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const { user } = useAuthStore()
+  if (!user || !hasPermission(user.role, 'clients:edit')) {
+    return <Navigate to={`/clients/${id}`} replace />
+  }
   const [serverError, setServerError] = useState<string | null>(null)
   const [clientType, setClientType] = useState<'individual' | 'corporate'>('individual')
   const [loading, setLoading] = useState(true)

@@ -1,11 +1,13 @@
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, Navigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import type { Matter, MatterStatus } from '@hakios/types'
+import { hasPermission } from '@hakios/types'
 import { api } from '../../lib/api'
 import { PageHeader } from '../../components/PageHeader'
+import { useAuthStore } from '../../store/auth'
 
 interface TypeCode { code: string; label: string }
 interface AssignableUser { id: string; firstName: string; lastName: string; role: string }
@@ -43,6 +45,10 @@ const LABEL_CLASS = 'block text-sm font-medium text-text-primary mb-1'
 export function MatterEditPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const { user } = useAuthStore()
+  if (!user || !hasPermission(user.role, 'matters:edit')) {
+    return <Navigate to={`/matters/${id}`} replace />
+  }
   const [serverError, setServerError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [users, setUsers] = useState<AssignableUser[]>([])
@@ -69,7 +75,7 @@ export function MatterEditPage() {
         status: matter.status,
         leadAdvocateId: matter.leadAdvocateId ?? '',
         supervisingPartnerId: matter.supervisingPartnerId ?? '',
-        clerkIds: matter.clerkIds,
+        clerkIds: matter.clerkIds ?? [],
         opposingParty: matter.opposingParty ?? '',
         opposingAdvocate: matter.opposingAdvocate ?? '',
         courtName: matter.courtName ?? '',
@@ -80,6 +86,10 @@ export function MatterEditPage() {
         nextAction: matter.nextAction ?? '',
         nextActionDue: matter.nextActionDue ?? '',
       })
+      if (matter.status === 'closed') {
+        navigate(`/matters/${id}`)
+        return
+      }
       setLoading(false)
     }).catch((err: Error) => {
       setServerError(err.message)
@@ -96,7 +106,9 @@ export function MatterEditPage() {
     try {
       const payload: Record<string, unknown> = {}
       for (const [k, v] of Object.entries(data)) {
-        if (v !== '' && v !== undefined && !(Array.isArray(v) && v.length === 0)) {
+        if (k === 'clerkIds') {
+          payload[k] = v ?? []   // always send clerkIds, even empty
+        } else if (v !== '' && v !== undefined) {
           payload[k] = v
         }
       }
