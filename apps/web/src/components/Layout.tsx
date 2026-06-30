@@ -49,8 +49,11 @@ export function Layout() {
           ))}
         </nav>
         <div className="px-4 py-4 border-t border-white/10">
-          <p className="text-white/60 text-xs truncate mb-2">
+          <p className="text-sm font-medium text-white truncate">
             {user?.firstName} {user?.lastName}
+          </p>
+          <p className="text-xs text-white/60 capitalize">
+            {user?.role}
           </p>
           <button
             onClick={handleLogout}
