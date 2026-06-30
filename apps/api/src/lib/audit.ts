@@ -1,3 +1,4 @@
+import type { PoolClient } from 'pg'
 import { db } from '../db/client.js'
 
 interface AuditParams {
@@ -9,8 +10,9 @@ interface AuditParams {
   afterValue?: unknown
 }
 
-export async function writeAuditLog(params: AuditParams): Promise<void> {
-  await db.query(
+export async function writeAuditLog(params: AuditParams, pgClient?: PoolClient): Promise<void> {
+  const executor = pgClient ?? db
+  await executor.query(
     `INSERT INTO audit_log (user_id, action, record_type, record_id, before_value, after_value)
      VALUES ($1, $2, $3, $4, $5, $6)`,
     [

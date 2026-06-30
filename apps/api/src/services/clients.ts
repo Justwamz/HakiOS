@@ -3,6 +3,7 @@ import type { PoolClient } from 'pg'
 import { generateClientId } from '@hakios/utils'
 import type { Client, ClientStatus, CreateClientInput, UpdateClientInput } from '@hakios/types'
 import { createError } from '../middleware/errorHandler.js'
+import { writeAuditLog } from '../lib/audit.js'
 
 export interface PaginatedResult<T> {
   items: T[]
@@ -33,7 +34,7 @@ function toClient(row: Record<string, unknown>): Client {
     postalAddress: (row['postal_address'] as string | null) ?? null,
     kraPin: (row['kra_pin'] as string | null) ?? null,
     status: row['status'] as Client['status'],
-    hasConflict: row['has_conflict'] as boolean,
+    hasConflict: Boolean(row['has_conflict']),
     conflictNotes: (row['conflict_notes'] as string | null) ?? null,
     internalNotes: (row['internal_notes'] as string | null) ?? null,
     createdBy: row['created_by'] as string,
@@ -144,8 +145,13 @@ export async function createClient(input: CreateClientInput, userId: string): Pr
         userId,
       ],
     )
+    const created = toClient(rows[0]!)
+    await writeAuditLog(
+      { userId, action: 'CREATE', recordType: 'client', recordId: created.id, afterValue: created },
+      pgClient,
+    )
     await pgClient.query('COMMIT')
-    return toClient(rows[0]!)
+    return created
   } catch (err) {
     await pgClient.query('ROLLBACK')
     throw err
@@ -159,38 +165,63 @@ export async function updateClient(
   input: UpdateClientInput,
   userId: string,
 ): Promise<Client> {
-  const existing = await getClient(id)
+  const pgClient = await db.connect()
+  try {
+    await pgClient.query('BEGIN')
 
-  const fieldMap: Record<string, string> = {
-    fullName: 'full_name', idNumber: 'id_number', contactPerson: 'contact_person',
-    phone: 'phone', email: 'email', postalAddress: 'postal_address',
-    kraPin: 'kra_pin', hasConflict: 'has_conflict',
-    conflictNotes: 'conflict_notes', internalNotes: 'internal_notes', status: 'status',
-  }
+    const { rows: lockRows } = await pgClient.query(
+      'SELECT * FROM clients WHERE id = $1 FOR UPDATE',
+      [id],
+    )
+    if (!lockRows[0]) throw createError('Client not found', 404, 'NOT_FOUND')
+    const before = toClient(lockRows[0])
 
-  const setClauses: string[] = []
-  const vals: unknown[] = []
-  let i = 1
-
-  for (const [jsKey, col] of Object.entries(fieldMap)) {
-    if (jsKey in input) {
-      setClauses.push(`${col} = $${i}`)
-      const v = input[jsKey as keyof UpdateClientInput]
-      vals.push(v !== undefined ? v : null)
-      i++
+    const fieldMap: Record<string, string> = {
+      fullName: 'full_name', idNumber: 'id_number', contactPerson: 'contact_person',
+      phone: 'phone', email: 'email', postalAddress: 'postal_address',
+      kraPin: 'kra_pin', hasConflict: 'has_conflict',
+      conflictNotes: 'conflict_notes', internalNotes: 'internal_notes', status: 'status',
     }
+
+    const setClauses: string[] = []
+    const vals: unknown[] = []
+    let i = 1
+
+    for (const [jsKey, col] of Object.entries(fieldMap)) {
+      if (jsKey in input) {
+        setClauses.push(`${col} = $${i}`)
+        const v = input[jsKey as keyof UpdateClientInput]
+        vals.push(v !== undefined ? v : null)
+        i++
+      }
+    }
+
+    if (setClauses.length === 0) {
+      await pgClient.query('ROLLBACK')
+      return before
+    }
+
+    setClauses.push(`updated_by = $${i}`, `updated_at = now()`)
+    vals.push(userId)
+    i++
+    vals.push(id)
+
+    const { rows } = await pgClient.query(
+      `UPDATE clients SET ${setClauses.join(', ')} WHERE id = $${i} RETURNING *`,
+      vals,
+    )
+    const after = toClient(rows[0]!)
+
+    await writeAuditLog(
+      { userId, action: 'UPDATE', recordType: 'client', recordId: after.id, beforeValue: before, afterValue: after },
+      pgClient,
+    )
+    await pgClient.query('COMMIT')
+    return after
+  } catch (err) {
+    await pgClient.query('ROLLBACK')
+    throw err
+  } finally {
+    pgClient.release()
   }
-
-  if (setClauses.length === 0) return existing
-
-  setClauses.push(`updated_by = $${i}`, `updated_at = now()`)
-  vals.push(userId)
-  i++
-  vals.push(id)
-
-  const { rows } = await db.query(
-    `UPDATE clients SET ${setClauses.join(', ')} WHERE id = $${i} RETURNING *`,
-    vals,
-  )
-  return toClient(rows[0]!)
 }
