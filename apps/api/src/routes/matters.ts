@@ -126,6 +126,10 @@ mattersRouter.put('/:id', requireAuth, requireRole('matters:edit'), async (req, 
     if (!id) return next(createError('Missing id', 400, 'BAD_REQUEST'))
     const parsed = updateSchema.safeParse(req.body)
     if (!parsed.success) return next(createError('Invalid request body', 400))
+    const current = await mattersService.getMatter(id)
+    if (current.status === 'closed') {
+      return next(createError('Cannot edit a closed matter', 400, 'MATTER_CLOSED'))
+    }
     const after = await mattersService.updateMatter(id, parsed.data, user.id)
     res.json(after)
   } catch (err) {

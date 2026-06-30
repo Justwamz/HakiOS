@@ -53,7 +53,8 @@ export function SettingsPage() {
   const [error, setError] = useState<string | null>(null)
   const [firmSaved, setFirmSaved] = useState(false)
   const [caseSaved, setCaseSaved] = useState(false)
-  const [saveError, setSaveError] = useState<string | null>(null)
+  const [firmSaveError, setFirmSaveError] = useState<string | null>(null)
+  const [caseSaveError, setCaseSaveError] = useState<string | null>(null)
   const [matterTypes, setMatterTypes] = useState<MatterTypeCode[]>([])
   const [typeError, setTypeError] = useState<string | null>(null)
   const [togglingCode, setTogglingCode] = useState<string | null>(null)
@@ -87,18 +88,18 @@ export function SettingsPage() {
 
   async function onFirmSubmit(data: FirmForm) {
     setFirmSaved(false)
-    setSaveError(null)
+    setFirmSaveError(null)
     try {
       await api('/settings/firm', { method: 'PUT', body: JSON.stringify(data) })
       setFirmSaved(true)
     } catch (err) {
-      setSaveError((err as Error).message || 'Failed to save firm profile.')
+      setFirmSaveError((err as Error).message || 'Failed to save firm profile.')
     }
   }
 
   async function onCaseSubmit(data: CaseForm) {
     setCaseSaved(false)
-    setSaveError(null)
+    setCaseSaveError(null)
     try {
       await api('/settings/case-number', { method: 'PUT', body: JSON.stringify({
         ...data,
@@ -106,7 +107,7 @@ export function SettingsPage() {
       }) })
       setCaseSaved(true)
     } catch (err) {
-      setSaveError((err as Error).message || 'Failed to save case number format.')
+      setCaseSaveError((err as Error).message || 'Failed to save case number format.')
     }
   }
 
@@ -146,11 +147,11 @@ export function SettingsPage() {
     <div>
       <PageHeader title="Settings" />
       <div className="p-8 max-w-2xl space-y-10">
-        {saveError && <p className="text-sm text-status-overdue mb-4">{saveError}</p>}
 
         {/* Firm Profile */}
         <section>
           <h2 className="text-sm font-semibold text-text-primary mb-4">Firm Profile</h2>
+          {firmSaveError && <p className="text-sm text-status-overdue mb-4">{firmSaveError}</p>}
           <form onSubmit={firmForm.handleSubmit(onFirmSubmit)} className="space-y-4">
             <div>
               <label className={LABEL_CLASS}>Firm name</label>
@@ -189,6 +190,7 @@ export function SettingsPage() {
         {/* Case Number Format */}
         <section>
           <h2 className="text-sm font-semibold text-text-primary mb-4">Case Number Format</h2>
+          {caseSaveError && <p className="text-sm text-status-overdue mb-4">{caseSaveError}</p>}
           <form onSubmit={caseForm.handleSubmit(onCaseSubmit)} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>

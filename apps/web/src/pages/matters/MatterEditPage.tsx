@@ -68,6 +68,7 @@ export function MatterEditPage() {
       setTypeCodes(typesRes)
       setMatterType(matter.matterType)
       if (matter.status === 'closed') {
+        setLoading(false)
         navigate(`/matters/${id}`)
         return
       }
@@ -92,7 +93,7 @@ export function MatterEditPage() {
       setServerError(err.message)
       setLoading(false)
     })
-  }, [id, reset])
+  }, [id, navigate, reset])
 
   if (!user || !hasPermission(user.role, 'matters:edit')) {
     return <Navigate to={`/matters/${id}`} replace />

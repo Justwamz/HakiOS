@@ -118,8 +118,8 @@ settingsRouter.post('/matter-types', requireAuth, requireRole('settings:manage')
        RETURNING code, label, is_active, created_at`,
       [code.toUpperCase(), label],
     )
-    if (!rows[0]) return next(createError('Code already exists', 409, 'CONFLICT'))
     const r = rows[0]
+    if (!r) return next(createError('Code already exists', 409, 'CONFLICT'))
     res.status(201).json({
       code: r['code'],
       label: r['label'],
@@ -143,8 +143,8 @@ settingsRouter.patch('/matter-types/:code', requireAuth, requireRole('settings:m
        RETURNING code, label, is_active, created_at`,
       [bodyResult.data.isActive, req.params['code']],
     )
-    if (!rows[0]) return next(createError('Matter type not found', 404, 'NOT_FOUND'))
     const r = rows[0]
+    if (!r) return next(createError('Matter type not found', 404, 'NOT_FOUND'))
     res.json({
       code: r['code'],
       label: r['label'],
