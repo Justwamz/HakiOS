@@ -73,7 +73,9 @@ clientsRouter.get('/:id', requireAuth, async (req, res, next) => {
     if (!canReadAll && !canReadAssigned) {
       return next(createError('Insufficient permissions', 403, 'FORBIDDEN'))
     }
-    const client = await clientsService.getClient(req.params['id']!)
+    const id = req.params['id']
+    if (!id) return next(createError('Missing id', 400, 'BAD_REQUEST'))
+    const client = await clientsService.getClient(id)
     if (!canReadAll) {
       const ok = await clientsService.userCanAccessClient(user.id, client.id)
       if (!ok) return next(createError('Insufficient permissions', 403, 'FORBIDDEN'))
@@ -90,7 +92,9 @@ clientsRouter.put('/:id', requireAuth, requireRole('clients:edit'), async (req, 
     if (!user) return next(createError('Authentication required', 401, 'UNAUTHENTICATED'))
     const parsed = updateSchema.safeParse(req.body)
     if (!parsed.success) return next(createError('Invalid request body', 400))
-    const after = await clientsService.updateClient(req.params['id']!, parsed.data, user.id)
+    const id = req.params['id']
+    if (!id) return next(createError('Missing id', 400, 'BAD_REQUEST'))
+    const after = await clientsService.updateClient(id, parsed.data, user.id)
     res.json(after)
   } catch (err) {
     next(err)

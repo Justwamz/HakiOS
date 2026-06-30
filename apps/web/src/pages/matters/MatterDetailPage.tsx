@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, Link, useNavigate } from 'react-router-dom'
+import { useParams, Link } from 'react-router-dom'
 import type { Matter } from '@hakios/types'
 import { hasPermission } from '@hakios/types'
 import { api } from '../../lib/api'
@@ -18,7 +18,6 @@ function Row({ label, value }: { label: string; value: string | null | undefined
 
 export function MatterDetailPage() {
   const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
   const { user } = useAuthStore()
   const [matter, setMatter] = useState<Matter | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -65,12 +64,6 @@ export function MatterDetailPage() {
                 {closing ? 'Closing…' : 'Close matter'}
               </button>
             )}
-            <button
-              onClick={() => navigate(`/matters/${id}/edit`)}
-              className="border border-border text-text-secondary text-sm font-medium px-4 py-2 rounded-lg hover:bg-background transition"
-            >
-              Edit
-            </button>
           </div>
         }
       />

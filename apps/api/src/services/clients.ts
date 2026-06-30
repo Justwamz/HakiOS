@@ -96,9 +96,11 @@ export async function listClients(opts: ListClientsOptions): Promise<PaginatedRe
     ),
   ])
 
+  const countRow = countRes.rows[0]
+  if (!countRow) throw new Error('COUNT query returned no row')
   return {
     items: rowsRes.rows.map(toClient),
-    total: parseInt(countRes.rows[0]!.total, 10),
+    total: parseInt(countRow.total, 10),
     page: opts.page,
     limit: opts.limit,
   }
