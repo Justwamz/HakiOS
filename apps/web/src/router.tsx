@@ -5,6 +5,9 @@ import { LoginPage } from './pages/auth/LoginPage'
 import { SetPasswordPage } from './pages/auth/SetPasswordPage'
 import { RequestResetPage } from './pages/auth/RequestResetPage'
 import { DashboardPage } from './pages/DashboardPage'
+import { ClientsListPage } from './pages/clients/ClientsListPage'
+import { CreateClientPage } from './pages/clients/CreateClientPage'
+import { ClientDetailPage } from './pages/clients/ClientDetailPage'
 
 export const router = createBrowserRouter([
   { path: '/auth/login', element: <LoginPage /> },
@@ -16,6 +19,9 @@ export const router = createBrowserRouter([
     element: <ProtectedRoute><Layout /></ProtectedRoute>,
     children: [
       { index: true, element: <DashboardPage /> },
+      { path: 'clients', element: <ClientsListPage /> },
+      { path: 'clients/new', element: <CreateClientPage /> },
+      { path: 'clients/:id', element: <ClientDetailPage /> },
     ],
   },
 ])
