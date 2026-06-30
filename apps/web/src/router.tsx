@@ -15,6 +15,7 @@ import { MatterDetailPage } from './pages/matters/MatterDetailPage'
 import { MatterEditPage } from './pages/matters/MatterEditPage'
 import { UsersPage } from './pages/users/UsersPage'
 import { InviteUserPage } from './pages/users/InviteUserPage'
+import { SettingsPage } from './pages/settings/SettingsPage'
 
 export const router = createBrowserRouter([
   { path: '/auth/login', element: <LoginPage /> },
@@ -36,6 +37,7 @@ export const router = createBrowserRouter([
       { path: 'matters/:id/edit', element: <MatterEditPage /> },
       { path: 'users', element: <UsersPage /> },
       { path: 'users/invite', element: <InviteUserPage /> },
+      { path: 'settings', element: <SettingsPage /> },
     ],
   },
 ])

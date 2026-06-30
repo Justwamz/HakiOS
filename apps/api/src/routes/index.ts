@@ -5,6 +5,7 @@ import { clientsRouter } from './clients.js'
 import { mattersRouter } from './matters.js'
 import { usersRouter } from './users.js'
 import { setupRouter } from './setup.js'
+import { settingsRouter } from './settings.js'
 
 export function registerRoutes(app: Express): void {
   app.use('/api/auth', authRouter)
@@ -13,4 +14,5 @@ export function registerRoutes(app: Express): void {
   app.use('/api/matters', mattersRouter)
   app.use('/api/users', usersRouter)
   app.use('/api/setup', setupRouter)
+  app.use('/api/settings', settingsRouter)
 }
