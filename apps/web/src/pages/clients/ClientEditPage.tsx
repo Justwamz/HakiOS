@@ -31,9 +31,6 @@ export function ClientEditPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { user } = useAuthStore()
-  if (!user || !hasPermission(user.role, 'clients:edit')) {
-    return <Navigate to={`/clients/${id}`} replace />
-  }
   const [serverError, setServerError] = useState<string | null>(null)
   const [clientType, setClientType] = useState<'individual' | 'corporate'>('individual')
   const [loading, setLoading] = useState(true)
@@ -69,6 +66,10 @@ export function ClientEditPage() {
         setLoading(false)
       })
   }, [id, reset])
+
+  if (!user || !hasPermission(user.role, 'clients:edit')) {
+    return <Navigate to={`/clients/${id}`} replace />
+  }
 
   async function onSubmit(data: Form) {
     setServerError(null)

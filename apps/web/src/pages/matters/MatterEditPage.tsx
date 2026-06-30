@@ -46,9 +46,6 @@ export function MatterEditPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { user } = useAuthStore()
-  if (!user || !hasPermission(user.role, 'matters:edit')) {
-    return <Navigate to={`/matters/${id}`} replace />
-  }
   const [serverError, setServerError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [users, setUsers] = useState<AssignableUser[]>([])
@@ -96,6 +93,10 @@ export function MatterEditPage() {
       setLoading(false)
     })
   }, [id, reset])
+
+  if (!user || !hasPermission(user.role, 'matters:edit')) {
+    return <Navigate to={`/matters/${id}`} replace />
+  }
 
   const advocates = users.filter((u) => u.role === 'associate' || u.role === 'partner' || u.role === 'admin')
   const partners = users.filter((u) => u.role === 'partner' || u.role === 'admin')
