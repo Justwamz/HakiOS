@@ -1,16 +1,22 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/auth'
 import { api } from '../lib/api'
-
-const NAV_ITEMS = [
-  { to: '/', label: 'Dashboard', end: true },
-  { to: '/clients', label: 'Clients' },
-  { to: '/matters', label: 'Matters' },
-]
+import { hasPermission } from '@hakios/types'
 
 export function Layout() {
   const { user, refreshToken, clearAuth } = useAuthStore()
   const navigate = useNavigate()
+
+  const canManageUsers = user ? hasPermission(user.role, 'users:manage') : false
+  const canManageSettings = user ? hasPermission(user.role, 'settings:manage') : false
+
+  const NAV_ITEMS = [
+    { to: '/', label: 'Dashboard', end: true },
+    { to: '/clients', label: 'Clients' },
+    { to: '/matters', label: 'Matters' },
+    ...(canManageUsers ? [{ to: '/users', label: 'Users' }] : []),
+    ...(canManageSettings ? [{ to: '/settings', label: 'Settings' }] : []),
+  ]
 
   async function handleLogout() {
     try {
