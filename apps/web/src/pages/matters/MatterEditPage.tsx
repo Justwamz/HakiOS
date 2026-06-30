@@ -67,6 +67,10 @@ export function MatterEditPage() {
       setUsers(usersRes)
       setTypeCodes(typesRes)
       setMatterType(matter.matterType)
+      if (matter.status === 'closed') {
+        navigate(`/matters/${id}`)
+        return
+      }
       reset({
         description: matter.description,
         status: matter.status,
@@ -83,10 +87,6 @@ export function MatterEditPage() {
         nextAction: matter.nextAction ?? '',
         nextActionDue: matter.nextActionDue ?? '',
       })
-      if (matter.status === 'closed') {
-        navigate(`/matters/${id}`)
-        return
-      }
       setLoading(false)
     }).catch((err: Error) => {
       setServerError(err.message)

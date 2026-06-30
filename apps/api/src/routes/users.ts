@@ -81,6 +81,9 @@ usersRouter.patch('/:id/status', requireAuth, requireRole('users:manage'), async
       return next(createError('isActive must be a boolean', 400, 'VALIDATION_ERROR'))
     }
     const { isActive } = result.data
+    if (req.params['id'] === req.user?.id && !isActive) {
+      return next(createError('Cannot deactivate your own account', 400, 'BAD_REQUEST'))
+    }
     const { rows } = await db.query<Record<string, unknown>>(
       `UPDATE users SET is_active = $1, updated_at = now()
        WHERE id = $2
