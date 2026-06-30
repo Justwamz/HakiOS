@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import type { Client } from '@hakios/types'
+import { hasPermission } from '@hakios/types'
 import { api } from '../../lib/api'
+import { useAuthStore } from '../../store/auth'
 import { PageHeader } from '../../components/PageHeader'
 import { StatusBadge } from '../../components/StatusBadge'
 
@@ -16,8 +18,11 @@ function DetailRow({ label, value }: { label: string; value: string | null | und
 
 export function ClientDetailPage() {
   const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
+  const { user } = useAuthStore()
   const [client, setClient] = useState<Client | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const canEdit = user ? hasPermission(user.role, 'clients:edit') : false
 
   useEffect(() => {
     if (!id) return
@@ -33,7 +38,19 @@ export function ClientDetailPage() {
     <div>
       <PageHeader
         title={client.fullName}
-        action={<StatusBadge status={client.status} />}
+        action={
+          <div className="flex items-center gap-3">
+            <StatusBadge status={client.status} />
+            {canEdit && (
+              <button
+                onClick={() => navigate(`/clients/${id}/edit`)}
+                className="border border-border text-text-secondary text-sm font-medium px-4 py-2 rounded-lg hover:bg-background transition"
+              >
+                Edit
+              </button>
+            )}
+          </div>
+        }
       />
       <div className="p-8 max-w-3xl space-y-8">
         <section>

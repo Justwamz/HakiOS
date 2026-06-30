@@ -8,9 +8,11 @@ import { DashboardPage } from './pages/DashboardPage'
 import { ClientsListPage } from './pages/clients/ClientsListPage'
 import { CreateClientPage } from './pages/clients/CreateClientPage'
 import { ClientDetailPage } from './pages/clients/ClientDetailPage'
+import { ClientEditPage } from './pages/clients/ClientEditPage'
 import { MattersListPage } from './pages/matters/MattersListPage'
 import { CreateMatterPage } from './pages/matters/CreateMatterPage'
 import { MatterDetailPage } from './pages/matters/MatterDetailPage'
+import { MatterEditPage } from './pages/matters/MatterEditPage'
 
 export const router = createBrowserRouter([
   { path: '/auth/login', element: <LoginPage /> },
@@ -25,9 +27,11 @@ export const router = createBrowserRouter([
       { path: 'clients', element: <ClientsListPage /> },
       { path: 'clients/new', element: <CreateClientPage /> },
       { path: 'clients/:id', element: <ClientDetailPage /> },
+      { path: 'clients/:id/edit', element: <ClientEditPage /> },
       { path: 'matters', element: <MattersListPage /> },
       { path: 'matters/new', element: <CreateMatterPage /> },
       { path: 'matters/:id', element: <MatterDetailPage /> },
+      { path: 'matters/:id/edit', element: <MatterEditPage /> },
     ],
   },
 ])

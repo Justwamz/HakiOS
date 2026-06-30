@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import type { Matter } from '@hakios/types'
 import { hasPermission } from '@hakios/types'
 import { api } from '../../lib/api'
@@ -18,6 +18,7 @@ function Row({ label, value }: { label: string; value: string | null | undefined
 
 export function MatterDetailPage() {
   const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
   const { user } = useAuthStore()
   const [matter, setMatter] = useState<Matter | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -44,6 +45,7 @@ export function MatterDetailPage() {
   }
 
   const canClose = user ? hasPermission(user.role, 'matters:close') : false
+  const canEdit = user ? hasPermission(user.role, 'matters:edit') : false
 
   if (error) return <div className="p-8 text-status-overdue text-sm">{error}</div>
   if (!matter) return <div className="p-8 text-text-muted text-sm">Loading…</div>
@@ -55,6 +57,14 @@ export function MatterDetailPage() {
         action={
           <div className="flex items-center gap-3">
             <StatusBadge status={matter.status} />
+            {canEdit && matter.status !== 'closed' && (
+              <button
+                onClick={() => navigate(`/matters/${id}/edit`)}
+                className="border border-border text-text-secondary text-sm font-medium px-4 py-2 rounded-lg hover:bg-background transition"
+              >
+                Edit
+              </button>
+            )}
             {canClose && matter.status !== 'closed' && (
               <button
                 onClick={handleClose}
