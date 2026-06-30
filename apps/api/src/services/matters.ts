@@ -167,8 +167,9 @@ export async function getMatter(id: string): Promise<Matter> {
     `${MATTER_SELECT} WHERE m.id = $1 GROUP BY m.id`,
     [id],
   )
-  if (!rows[0]) throw createError('Matter not found', 404, 'NOT_FOUND')
-  return toMatter(rows[0])
+  const row = rows[0]
+  if (!row) throw createError('Matter not found', 404, 'NOT_FOUND')
+  return toMatter(row)
 }
 
 export async function userCanAccessMatter(userId: string, matterId: string): Promise<boolean> {
@@ -263,7 +264,8 @@ export async function updateMatter(
     )
     const existingRow = existingRes.rows[0]
     if (!existingRow) throw createError('Matter not found', 404, 'NOT_FOUND')
-    const existing = toMatter(existingRow)
+    // Get the full before-snapshot (with JOINs) for the audit log
+    const existing = await getMatterTx(id, pgClient)
 
     const fieldMap: Record<string, string> = {
       description: 'description',
@@ -351,7 +353,8 @@ export async function closeMatter(
     const existingRow = rows[0]
     if (!existingRow) throw createError('Matter not found', 404, 'NOT_FOUND')
     if (existingRow['status'] === 'closed') throw createError('Matter is already closed', 409, 'ALREADY_CLOSED')
-    const existingMatter = toMatter(existingRow)
+    // Get the full before-snapshot (with JOINs) for the audit log
+    const existingMatter = await getMatterTx(id, pgClient)
 
     await pgClient.query(
       `UPDATE matters SET status = 'closed', date_closed = $1, updated_by = $2, updated_at = now() WHERE id = $3`,

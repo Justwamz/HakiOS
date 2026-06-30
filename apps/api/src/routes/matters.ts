@@ -105,7 +105,9 @@ mattersRouter.get('/:id', requireAuth, async (req, res, next) => {
   try {
     const user = req.user
     if (!user) return next(createError('Unauthorized', 401, 'UNAUTHORIZED'))
-    const matter = await mattersService.getMatter(req.params['id']!)
+    const id = req.params['id']
+    if (!id) return next(createError('Missing id', 400, 'BAD_REQUEST'))
+    const matter = await mattersService.getMatter(id)
     if (!hasPermission(user.role, 'matters:read_all')) {
       const ok = await mattersService.userCanAccessMatter(user.id, matter.id)
       if (!ok) return next(createError('Insufficient permissions', 403, 'FORBIDDEN'))
@@ -120,9 +122,11 @@ mattersRouter.put('/:id', requireAuth, requireRole('matters:edit'), async (req, 
   try {
     const user = req.user
     if (!user) return next(createError('Unauthorized', 401, 'UNAUTHORIZED'))
+    const id = req.params['id']
+    if (!id) return next(createError('Missing id', 400, 'BAD_REQUEST'))
     const parsed = updateSchema.safeParse(req.body)
     if (!parsed.success) return next(createError('Invalid request body', 400))
-    const after = await mattersService.updateMatter(req.params['id']!, parsed.data, user.id)
+    const after = await mattersService.updateMatter(id, parsed.data, user.id)
     res.json(after)
   } catch (err) {
     next(err)
@@ -133,9 +137,11 @@ mattersRouter.post('/:id/close', requireAuth, requireRole('matters:close'), asyn
   try {
     const user = req.user
     if (!user) return next(createError('Unauthorized', 401, 'UNAUTHORIZED'))
+    const id = req.params['id']
+    if (!id) return next(createError('Missing id', 400, 'BAD_REQUEST'))
     const parsed = closeSchema.safeParse(req.body)
     if (!parsed.success) return next(createError('Invalid request body', 400))
-    const after = await mattersService.closeMatter(req.params['id']!, parsed.data, user.id)
+    const after = await mattersService.closeMatter(id, parsed.data, user.id)
     res.json(after)
   } catch (err) {
     next(err)
