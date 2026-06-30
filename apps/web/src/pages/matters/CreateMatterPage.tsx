@@ -13,7 +13,7 @@ interface PaginatedClients { items: Client[]; total: number }
 
 const schema = z.object({
   clientId: z.string().uuid('Select a client'),
-  matterType: z.string().min(1, 'Select a matter type'),
+  matterTypeCode: z.string().min(1, 'Select a matter type'),
   description: z.string().min(1, 'Description is required'),
   leadAdvocateId: z.string().uuid().optional().or(z.literal('')),
   supervisingPartnerId: z.string().uuid().optional().or(z.literal('')),
@@ -98,13 +98,13 @@ export function CreateMatterPage() {
 
           <div>
             <label className={LABEL_CLASS}>Matter type *</label>
-            <select {...register('matterType')} className={INPUT_CLASS}>
+            <select {...register('matterTypeCode')} className={INPUT_CLASS}>
               <option value="">Select type…</option>
               {typesCodes.map((t) => (
                 <option key={t.code} value={t.code}>{t.label}</option>
               ))}
             </select>
-            {errors.matterType && <p className="mt-1 text-xs text-status-overdue">{errors.matterType.message}</p>}
+            {errors.matterTypeCode && <p className="mt-1 text-xs text-status-overdue">{errors.matterTypeCode.message}</p>}
           </div>
 
           <div>
