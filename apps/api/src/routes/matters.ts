@@ -5,7 +5,6 @@ import { requireAuth } from '../middleware/requireAuth.js'
 import { requireRole } from '../middleware/requireRole.js'
 import { createError } from '../middleware/errorHandler.js'
 import * as mattersService from '../services/matters.js'
-import { writeAuditLog } from '../lib/audit.js'
 import { db } from '../db/client.js'
 
 export const mattersRouter = Router()
@@ -74,7 +73,8 @@ mattersRouter.get('/types', requireAuth, async (_req, res, next) => {
 
 mattersRouter.get('/', requireAuth, async (req, res, next) => {
   try {
-    const user = req.user!
+    const user = req.user
+    if (!user) return next(createError('Unauthorized', 401, 'UNAUTHORIZED'))
     const canReadAll = hasPermission(user.role, 'matters:read_all')
     if (!canReadAll && !hasPermission(user.role, 'matters:read_assigned')) {
       return next(createError('Insufficient permissions', 403, 'FORBIDDEN'))
@@ -90,10 +90,11 @@ mattersRouter.get('/', requireAuth, async (req, res, next) => {
 
 mattersRouter.post('/', requireAuth, requireRole('matters:create'), async (req, res, next) => {
   try {
+    const user = req.user
+    if (!user) return next(createError('Unauthorized', 401, 'UNAUTHORIZED'))
     const parsed = createSchema.safeParse(req.body)
     if (!parsed.success) return next(createError('Invalid request body', 400))
-    const matter = await mattersService.createMatter(parsed.data, req.user!.id)
-    await writeAuditLog({ userId: req.user!.id, action: 'CREATE', recordType: 'matter', recordId: matter.id, afterValue: matter })
+    const matter = await mattersService.createMatter(parsed.data, user.id)
     res.status(201).json(matter)
   } catch (err) {
     next(err)
@@ -102,7 +103,8 @@ mattersRouter.post('/', requireAuth, requireRole('matters:create'), async (req, 
 
 mattersRouter.get('/:id', requireAuth, async (req, res, next) => {
   try {
-    const user = req.user!
+    const user = req.user
+    if (!user) return next(createError('Unauthorized', 401, 'UNAUTHORIZED'))
     const matter = await mattersService.getMatter(req.params['id']!)
     if (!hasPermission(user.role, 'matters:read_all')) {
       const ok = await mattersService.userCanAccessMatter(user.id, matter.id)
@@ -116,11 +118,11 @@ mattersRouter.get('/:id', requireAuth, async (req, res, next) => {
 
 mattersRouter.put('/:id', requireAuth, requireRole('matters:edit'), async (req, res, next) => {
   try {
-    const before = await mattersService.getMatter(req.params['id']!)
+    const user = req.user
+    if (!user) return next(createError('Unauthorized', 401, 'UNAUTHORIZED'))
     const parsed = updateSchema.safeParse(req.body)
     if (!parsed.success) return next(createError('Invalid request body', 400))
-    const after = await mattersService.updateMatter(req.params['id']!, parsed.data, req.user!.id)
-    await writeAuditLog({ userId: req.user!.id, action: 'UPDATE', recordType: 'matter', recordId: after.id, beforeValue: before, afterValue: after })
+    const after = await mattersService.updateMatter(req.params['id']!, parsed.data, user.id)
     res.json(after)
   } catch (err) {
     next(err)
@@ -129,11 +131,11 @@ mattersRouter.put('/:id', requireAuth, requireRole('matters:edit'), async (req, 
 
 mattersRouter.post('/:id/close', requireAuth, requireRole('matters:close'), async (req, res, next) => {
   try {
-    const before = await mattersService.getMatter(req.params['id']!)
+    const user = req.user
+    if (!user) return next(createError('Unauthorized', 401, 'UNAUTHORIZED'))
     const parsed = closeSchema.safeParse(req.body)
     if (!parsed.success) return next(createError('Invalid request body', 400))
-    const after = await mattersService.closeMatter(req.params['id']!, parsed.data, req.user!.id)
-    await writeAuditLog({ userId: req.user!.id, action: 'CLOSE', recordType: 'matter', recordId: after.id, beforeValue: before, afterValue: after })
+    const after = await mattersService.closeMatter(req.params['id']!, parsed.data, user.id)
     res.json(after)
   } catch (err) {
     next(err)

@@ -10,6 +10,7 @@ import type {
   CaseNumberSettings,
 } from '@hakios/types'
 import { createError } from '../middleware/errorHandler.js'
+import { writeAuditLog } from '../lib/audit.js'
 
 export interface ListMattersOptions {
   clientId?: string
@@ -71,6 +72,17 @@ function toMatter(row: Record<string, unknown>): Matter {
   }
 }
 
+/** Read full matter row within an existing transaction connection. */
+async function getMatterTx(id: string, pgClient: PoolClient): Promise<Matter> {
+  const { rows } = await pgClient.query(
+    `${MATTER_SELECT} WHERE m.id = $1 GROUP BY m.id`,
+    [id],
+  )
+  const row = rows[0]
+  if (!row) throw createError('Matter not found', 404, 'NOT_FOUND')
+  return toMatter(row)
+}
+
 async function nextMatterSeq(year: number, pgClient: PoolClient): Promise<number> {
   const { rows } = await pgClient.query<{ seq: number }>(
     `INSERT INTO matter_sequences (year, next_val)
@@ -79,7 +91,9 @@ async function nextMatterSeq(year: number, pgClient: PoolClient): Promise<number
      RETURNING next_val - 1 AS seq`,
     [year],
   )
-  return rows[0]!.seq
+  const row = rows[0]
+  if (!row) throw new Error('Sequence upsert returned no row')
+  return row.seq
 }
 
 async function getCaseNumberSettings(pgClient: PoolClient): Promise<CaseNumberSettings> {
@@ -137,9 +151,12 @@ export async function listMatters(opts: ListMattersOptions): Promise<PaginatedRe
     ),
   ])
 
+  const countRow = countRes.rows[0]
+  if (!countRow) throw new Error('COUNT query returned no row')
+
   return {
     items: rowsRes.rows.map(toMatter),
-    total: parseInt(countRes.rows[0]!.total, 10),
+    total: parseInt(countRow.total, 10),
     page: opts.page,
     limit: opts.limit,
   }
@@ -169,6 +186,7 @@ export async function userCanAccessMatter(userId: string, matterId: string): Pro
 export async function createMatter(input: CreateMatterInput, userId: string): Promise<Matter> {
   const year = new Date().getFullYear()
   const pgClient = await db.connect()
+  let matterId: string | undefined
   try {
     await pgClient.query('BEGIN')
     const settings = await getCaseNumberSettings(pgClient)
@@ -194,7 +212,9 @@ export async function createMatter(input: CreateMatterInput, userId: string): Pr
         userId,
       ],
     )
-    const matterId = rows[0]!.id
+    const insertedRow = rows[0]
+    if (!insertedRow) throw new Error('Matter INSERT returned no row')
+    matterId = insertedRow.id
 
     if (input.clerkIds?.length) {
       const placeholders = input.clerkIds.map((_, k) => `($1, $${k + 2})`).join(', ')
@@ -210,8 +230,15 @@ export async function createMatter(input: CreateMatterInput, userId: string): Pr
       [matterId, userId],
     )
 
+    // Read the full matter within the transaction to capture afterValue for audit log
+    const createdMatter = await getMatterTx(matterId, pgClient)
+    await writeAuditLog(
+      { userId, action: 'CREATE', recordType: 'matter', recordId: matterId, afterValue: createdMatter },
+      pgClient,
+    )
+
     await pgClient.query('COMMIT')
-    return getMatter(matterId)
+    return createdMatter
   } catch (err) {
     await pgClient.query('ROLLBACK')
     throw err
@@ -225,10 +252,18 @@ export async function updateMatter(
   input: UpdateMatterInput,
   userId: string,
 ): Promise<Matter> {
-  const existing = await getMatter(id)
   const pgClient = await db.connect()
   try {
     await pgClient.query('BEGIN')
+
+    // Lock the row for the duration of the transaction (prevents TOCTOU)
+    const existingRes = await pgClient.query(
+      'SELECT * FROM matters WHERE id = $1 FOR UPDATE',
+      [id],
+    )
+    const existingRow = existingRes.rows[0]
+    if (!existingRow) throw createError('Matter not found', 404, 'NOT_FOUND')
+    const existing = toMatter(existingRow)
 
     const fieldMap: Record<string, string> = {
       description: 'description',
@@ -283,15 +318,21 @@ export async function updateMatter(
       )
     }
 
+    // Read updated state within transaction for audit log
+    const updatedMatter = await getMatterTx(id, pgClient)
+    await writeAuditLog(
+      { userId, action: 'UPDATE', recordType: 'matter', recordId: id, beforeValue: existing, afterValue: updatedMatter },
+      pgClient,
+    )
+
     await pgClient.query('COMMIT')
+    return updatedMatter
   } catch (err) {
     await pgClient.query('ROLLBACK')
     throw err
   } finally {
     pgClient.release()
   }
-
-  return getMatter(id)
 }
 
 export async function closeMatter(
@@ -303,12 +344,14 @@ export async function closeMatter(
   const pgClient = await db.connect()
   try {
     await pgClient.query('BEGIN')
-    const { rows } = await pgClient.query<{ status: string }>(
-      'SELECT status FROM matters WHERE id = $1 FOR UPDATE',
+    const { rows } = await pgClient.query(
+      'SELECT * FROM matters WHERE id = $1 FOR UPDATE',
       [id],
     )
-    if (!rows[0]) throw createError('Matter not found', 404, 'NOT_FOUND')
-    if (rows[0].status === 'closed') throw createError('Matter is already closed', 409, 'ALREADY_CLOSED')
+    const existingRow = rows[0]
+    if (!existingRow) throw createError('Matter not found', 404, 'NOT_FOUND')
+    if (existingRow['status'] === 'closed') throw createError('Matter is already closed', 409, 'ALREADY_CLOSED')
+    const existingMatter = toMatter(existingRow)
 
     await pgClient.query(
       `UPDATE matters SET status = 'closed', date_closed = $1, updated_by = $2, updated_at = now() WHERE id = $3`,
@@ -319,12 +362,20 @@ export async function closeMatter(
        VALUES ($1, 'closure', $2, $3)`,
       [id, input.closureNote ?? 'Matter closed', userId],
     )
+
+    // Read closed state within transaction for audit log
+    const closedMatter = await getMatterTx(id, pgClient)
+    await writeAuditLog(
+      { userId, action: 'CLOSE', recordType: 'matter', recordId: id, beforeValue: existingMatter, afterValue: closedMatter },
+      pgClient,
+    )
+
     await pgClient.query('COMMIT')
+    return closedMatter
   } catch (err) {
     await pgClient.query('ROLLBACK')
     throw err
   } finally {
     pgClient.release()
   }
-  return getMatter(id)
 }

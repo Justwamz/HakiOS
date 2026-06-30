@@ -8,7 +8,7 @@ usersRouter.get('/assignable', requireAuth, async (_req, res, next) => {
   try {
     const { rows } = await db.query(
       `SELECT id, email, first_name, last_name, role
-       FROM users WHERE is_active = true ORDER BY first_name, last_name`,
+       FROM users WHERE is_active = true AND role IN ('partner', 'associate', 'clerk') ORDER BY first_name, last_name`,
     )
     res.json(
       rows.map((r: Record<string, unknown>) => ({
