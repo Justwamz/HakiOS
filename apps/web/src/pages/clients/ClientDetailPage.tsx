@@ -79,10 +79,10 @@ export function ClientDetailPage() {
           <section>
             <h2 className="text-xs font-semibold text-text-secondary uppercase tracking-wide mb-4">Notes</h2>
             {client.hasConflict && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-                <p className="text-sm font-medium text-red-700 mb-1">Conflict of Interest</p>
+              <div className="bg-status-conflict-bg border border-status-conflict-border rounded-lg p-4 mb-4">
+                <p className="text-sm font-medium text-status-conflict-text mb-1">Conflict of Interest</p>
                 {client.conflictNotes && (
-                  <p className="text-sm text-red-600">{client.conflictNotes}</p>
+                  <p className="text-sm text-status-conflict-text">{client.conflictNotes}</p>
                 )}
               </div>
             )}

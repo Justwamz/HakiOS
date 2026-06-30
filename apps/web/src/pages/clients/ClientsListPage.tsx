@@ -25,6 +25,7 @@ export function ClientsListPage() {
     if (search) params.set('search', search)
     if (status) params.set('status', status)
     params.set('page', String(page))
+    params.set('limit', '20')
     setError(null)
     api<PaginatedClients>(`/clients?${params.toString()}`)
       .then(setData)

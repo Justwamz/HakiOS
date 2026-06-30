@@ -35,6 +35,9 @@ const config: Config = {
           'closed-text': '#475569',
           'dormant-bg': '#f8fafc',
           'dormant-text': '#64748b',
+          'conflict-bg': '#fef2f2',
+          'conflict-border': '#fecaca',
+          'conflict-text': '#b91c1c',
         },
       },
       fontFamily: {
