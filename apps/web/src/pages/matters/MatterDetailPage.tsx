@@ -84,12 +84,12 @@ export function MatterDetailPage() {
         <section>
           <h2 className="text-xs font-semibold text-text-secondary uppercase tracking-wide mb-4">Assignments</h2>
           <dl className="grid grid-cols-2 gap-x-8 gap-y-4">
-            <Row label="Lead Advocate" value={matter.leadAdvocateId ?? null} />
-            <Row label="Supervising Partner" value={matter.supervisingPartnerId ?? null} />
+            <Row label="Lead Advocate" value={matter.leadAdvocateName} />
+            <Row label="Supervising Partner" value={matter.supervisingPartnerName} />
             <div>
               <dt className="text-xs text-text-muted">Clerks</dt>
               <dd className="text-sm text-text-primary mt-0.5">
-                {matter.clerkIds.length ? matter.clerkIds.join(', ') : '—'}
+                {matter.clerkNames.length ? matter.clerkNames.join(', ') : '—'}
               </dd>
             </div>
           </dl>

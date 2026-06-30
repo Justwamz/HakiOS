@@ -31,10 +31,16 @@ export interface PaginatedResult<T> {
 
 const MATTER_SELECT = `
   SELECT m.*,
+    MAX(la.first_name || ' ' || la.last_name) AS lead_advocate_name,
+    MAX(sp.first_name || ' ' || sp.last_name) AS supervising_partner_name,
     COALESCE(ARRAY_AGG(DISTINCT mc.user_id) FILTER (WHERE mc.user_id IS NOT NULL), '{}') AS clerk_ids,
+    COALESCE(ARRAY_AGG(DISTINCT (cu.first_name || ' ' || cu.last_name)) FILTER (WHERE mc.user_id IS NOT NULL), '{}') AS clerk_names,
     COALESCE(ARRAY_AGG(DISTINCT rm.related_matter_id) FILTER (WHERE rm.related_matter_id IS NOT NULL), '{}') AS related_matter_ids
   FROM matters m
+  LEFT JOIN users la ON la.id = m.lead_advocate_id
+  LEFT JOIN users sp ON sp.id = m.supervising_partner_id
   LEFT JOIN matter_clerks mc ON mc.matter_id = m.id
+  LEFT JOIN users cu ON cu.id = mc.user_id
   LEFT JOIN related_matters rm ON rm.matter_id = m.id
 `
 
@@ -47,8 +53,11 @@ function toMatter(row: Record<string, unknown>): Matter {
     description: row['description'] as string,
     status: row['status'] as Matter['status'],
     leadAdvocateId: (row['lead_advocate_id'] as string | null) ?? null,
+    leadAdvocateName: (row['lead_advocate_name'] as string | null) ?? null,
     supervisingPartnerId: (row['supervising_partner_id'] as string | null) ?? null,
+    supervisingPartnerName: (row['supervising_partner_name'] as string | null) ?? null,
     clerkIds: (row['clerk_ids'] as string[]) ?? [],
+    clerkNames: (row['clerk_names'] as string[]) ?? [],
     opposingParty: (row['opposing_party'] as string | null) ?? null,
     opposingAdvocate: (row['opposing_advocate'] as string | null) ?? null,
     courtName: (row['court_name'] as string | null) ?? null,

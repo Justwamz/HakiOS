@@ -21,8 +21,11 @@ export interface Matter {
   description: string
   status: MatterStatus
   leadAdvocateId: string | null
+  leadAdvocateName: string | null
   supervisingPartnerId: string | null
+  supervisingPartnerName: string | null
   clerkIds: string[]
+  clerkNames: string[]
   opposingParty: string | null
   opposingAdvocate: string | null
   courtName: string | null
