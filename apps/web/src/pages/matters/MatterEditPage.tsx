@@ -22,7 +22,7 @@ const MATTER_STATUSES: { value: MatterStatus; label: string }[] = [
 
 const schema = z.object({
   description: z.string().min(1, 'Description is required'),
-  status: z.enum(['active', 'pending', 'adjourned', 'on_appeal', 'settled', 'closed']),
+  status: z.enum(['active', 'pending', 'adjourned', 'on_appeal', 'settled']),
   leadAdvocateId: z.string().uuid().optional().or(z.literal('')),
   supervisingPartnerId: z.string().uuid().optional().or(z.literal('')),
   clerkIds: z.array(z.string().uuid()).optional(),

@@ -53,6 +53,7 @@ export function SettingsPage() {
   const [error, setError] = useState<string | null>(null)
   const [firmSaved, setFirmSaved] = useState(false)
   const [caseSaved, setCaseSaved] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
   const [matterTypes, setMatterTypes] = useState<MatterTypeCode[]>([])
   const [typeError, setTypeError] = useState<string | null>(null)
   const [togglingCode, setTogglingCode] = useState<string | null>(null)
@@ -86,17 +87,27 @@ export function SettingsPage() {
 
   async function onFirmSubmit(data: FirmForm) {
     setFirmSaved(false)
-    await api('/settings/firm', { method: 'PUT', body: JSON.stringify(data) })
-    setFirmSaved(true)
+    setSaveError(null)
+    try {
+      await api('/settings/firm', { method: 'PUT', body: JSON.stringify(data) })
+      setFirmSaved(true)
+    } catch (err) {
+      setSaveError((err as Error).message || 'Failed to save firm profile.')
+    }
   }
 
   async function onCaseSubmit(data: CaseForm) {
     setCaseSaved(false)
-    await api('/settings/case-number', { method: 'PUT', body: JSON.stringify({
-      ...data,
-      sequenceDigits: Number(data.sequenceDigits) as 4 | 5 | 6,
-    }) })
-    setCaseSaved(true)
+    setSaveError(null)
+    try {
+      await api('/settings/case-number', { method: 'PUT', body: JSON.stringify({
+        ...data,
+        sequenceDigits: Number(data.sequenceDigits) as 4 | 5 | 6,
+      }) })
+      setCaseSaved(true)
+    } catch (err) {
+      setSaveError((err as Error).message || 'Failed to save case number format.')
+    }
   }
 
   async function onTypeSubmit(data: TypeForm) {
@@ -135,6 +146,7 @@ export function SettingsPage() {
     <div>
       <PageHeader title="Settings" />
       <div className="p-8 max-w-2xl space-y-10">
+        {saveError && <p className="text-sm text-status-overdue mb-4">{saveError}</p>}
 
         {/* Firm Profile */}
         <section>
