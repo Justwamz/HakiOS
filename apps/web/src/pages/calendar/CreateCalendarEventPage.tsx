@@ -206,19 +206,17 @@ export function CreateCalendarEventPage() {
           </div>
 
           {/* Supervising Partner */}
-          {partners.length > 0 && (
-            <div>
-              <label className={LABEL_CLASS}>Supervising partner (optional)</label>
-              <select {...register('supervisingPartnerId')} className={INPUT_CLASS}>
-                <option value="">None</option>
-                {partners.map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.firstName} {u.lastName}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
+          <div>
+            <label className={LABEL_CLASS}>Supervising partner (optional)</label>
+            <select {...register('supervisingPartnerId')} className={INPUT_CLASS} disabled={partners.length === 0}>
+              <option value="">{partners.length === 0 ? 'Loading…' : 'None'}</option>
+              {partners.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.firstName} {u.lastName}
+                </option>
+              ))}
+            </select>
+          </div>
 
           {/* Notes */}
           <div>

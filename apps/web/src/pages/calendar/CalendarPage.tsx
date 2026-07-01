@@ -169,7 +169,8 @@ export function CalendarPage() {
         <div className="space-y-8">
           {sortedDates.map((date) => {
             const dayEvents = grouped[date] ?? []
-            const isOverdue = date < today
+            const hasUnresolved = dayEvents.some(e => !e.isResolved)
+            const isOverdue = date < today && hasUnresolved
             return (
               <section key={date}>
                 <h2
