@@ -37,8 +37,14 @@ async function doRefresh(): Promise<string> {
 }
 
 async function getValidToken(): Promise<string | null> {
-  const { accessToken } = useAuthStore.getState()
-  if (!accessToken) return null
+  const { accessToken, refreshToken } = useAuthStore.getState()
+  if (!accessToken) {
+    if (!refreshToken) return null
+    if (!refreshPromise) {
+      refreshPromise = doRefresh().finally(() => { refreshPromise = null })
+    }
+    return refreshPromise
+  }
 
   try {
     const parts = accessToken.split('.')
