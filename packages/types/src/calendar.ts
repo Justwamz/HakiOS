@@ -13,7 +13,8 @@ export interface CalendarEvent {
   eventType: EventType
   title: string
   matterId: string
-  clientId: string              // inherited from matter
+  matterNumber: string          // e.g. "LF/2024/00001"
+  clientId: string
   date: string                  // YYYY-MM-DD
   time: string | null           // HH:MM
   assigneeIds: string[]
@@ -38,4 +39,14 @@ export interface CreateCalendarEventInput {
   supervisingPartnerId?: string
   notes?: string
   recurrence?: RecurrenceType
+}
+
+export interface UpdateCalendarEventInput {
+  eventType?: EventType
+  title?: string
+  date?: string
+  time?: string | null
+  assigneeIds?: string[]
+  supervisingPartnerId?: string | null
+  notes?: string | null
 }
