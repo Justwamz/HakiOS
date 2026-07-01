@@ -20,6 +20,7 @@ import { CalendarPage } from './pages/calendar/CalendarPage'
 import { CreateCalendarEventPage } from './pages/calendar/CreateCalendarEventPage'
 import { CalendarEventDetailPage } from './pages/calendar/CalendarEventDetailPage'
 import { CalendarEventEditPage } from './pages/calendar/CalendarEventEditPage'
+import { NotificationsPage } from './pages/notifications/NotificationsPage'
 
 export const router = createBrowserRouter([
   { path: '/auth/login', element: <LoginPage /> },
@@ -43,6 +44,7 @@ export const router = createBrowserRouter([
       { path: 'calendar/new', element: <CreateCalendarEventPage /> },
       { path: 'calendar/:id', element: <CalendarEventDetailPage /> },
       { path: 'calendar/:id/edit', element: <CalendarEventEditPage /> },
+      { path: 'notifications', element: <NotificationsPage /> },
       { path: 'users', element: <UsersPage /> },
       { path: 'users/invite', element: <InviteUserPage /> },
       { path: 'settings', element: <SettingsPage /> },
