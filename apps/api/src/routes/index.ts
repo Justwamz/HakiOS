@@ -8,6 +8,7 @@ import { setupRouter } from './setup.js'
 import { settingsRouter } from './settings.js'
 import { calendarRouter } from './calendar.js'
 import { notificationsRouter } from './notifications.js'
+import { cronRouter } from './cron.js'
 
 export function registerRoutes(app: Express): void {
   app.use('/api/auth', authRouter)
@@ -19,4 +20,5 @@ export function registerRoutes(app: Express): void {
   app.use('/api/settings', settingsRouter)
   app.use('/api/calendar', calendarRouter)
   app.use('/api/notifications', notificationsRouter)
+  app.use('/api/cron', cronRouter)
 }
