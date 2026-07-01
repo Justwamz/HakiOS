@@ -6,7 +6,7 @@ export type EventType =
   | 'client_meeting'
   | 'internal_review'
 
-export type RecurrenceType = 'none' | 'weekly' | 'monthly' | 'custom'
+export type RecurrenceType = 'none' | 'weekly' | 'monthly'
 
 export interface CalendarEvent {
   id: string
