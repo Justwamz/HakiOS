@@ -14,6 +14,7 @@ export function Layout() {
     { to: '/', label: 'Dashboard', end: true },
     { to: '/clients', label: 'Clients' },
     { to: '/matters', label: 'Matters' },
+    { to: '/calendar', label: 'Calendar' },
     ...(canManageUsers ? [{ to: '/users', label: 'Users' }] : []),
     ...(canManageSettings ? [{ to: '/settings', label: 'Settings' }] : []),
   ]
