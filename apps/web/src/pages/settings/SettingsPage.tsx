@@ -47,6 +47,15 @@ type TypeForm = z.infer<typeof typeSchema>
 const INPUT_CLASS = 'w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary'
 const LABEL_CLASS = 'block text-sm font-medium text-text-primary mb-1'
 
+const EVENT_TYPE_OPTIONS = [
+  { value: 'court_hearing', label: 'Court Hearing' },
+  { value: 'filing_deadline', label: 'Filing Deadline' },
+  { value: 'submission_deadline', label: 'Submission Deadline' },
+  { value: 'mention', label: 'Mention' },
+  { value: 'client_meeting', label: 'Client Meeting' },
+  { value: 'internal_review', label: 'Internal Review' },
+]
+
 export function SettingsPage() {
   const { user } = useAuthStore()
   const [loading, setLoading] = useState(true)
@@ -58,15 +67,6 @@ export function SettingsPage() {
   const [matterTypes, setMatterTypes] = useState<MatterTypeCode[]>([])
   const [typeError, setTypeError] = useState<string | null>(null)
   const [togglingCode, setTogglingCode] = useState<string | null>(null)
-
-  const EVENT_TYPE_OPTIONS = [
-    { value: 'court_hearing', label: 'Court Hearing' },
-    { value: 'filing_deadline', label: 'Filing Deadline' },
-    { value: 'submission_deadline', label: 'Submission Deadline' },
-    { value: 'mention', label: 'Mention' },
-    { value: 'client_meeting', label: 'Client Meeting' },
-    { value: 'internal_review', label: 'Internal Review' },
-  ]
 
   const [schedules, setSchedules] = useState<ReminderSchedule[]>([])
   const [scheduleLoading, setScheduleLoading] = useState(true)

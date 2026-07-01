@@ -205,4 +205,11 @@ describe('Reminder Schedules', () => {
       .set('Authorization', `Bearer ${adminToken}`)
     expect(res.status).toBe(204)
   })
+
+  it('DELETE /api/settings/reminder-schedules/:id returns 404 for unknown id', async () => {
+    const res = await request(app)
+      .delete('/api/settings/reminder-schedules/00000000-0000-0000-0000-000000000000')
+      .set('Authorization', `Bearer ${adminToken}`)
+    expect(res.status).toBe(404)
+  })
 })
