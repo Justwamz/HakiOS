@@ -19,6 +19,8 @@ const config: Config = {
         },
         status: {
           overdue: '#c0392b',
+          'overdue-bg': '#fde8e8',
+          'overdue-text': '#991b1b',
           urgent: '#d4820a',
           upcoming: '#1a6b9a',
           'active-bg': '#dcfce7',

@@ -361,7 +361,7 @@ export function SettingsPage() {
           </p>
 
           {scheduleError && (
-            <p className="text-sm text-status-overdue-text mb-3">{scheduleError}</p>
+            <p className="text-sm text-status-overdue mb-3">{scheduleError}</p>
           )}
 
           {scheduleLoading ? (
@@ -381,7 +381,7 @@ export function SettingsPage() {
                       </span>
                       <button
                         onClick={() => handleDeleteSchedule(s.id)}
-                        className="text-xs text-status-overdue-text hover:underline"
+                        className="text-xs text-status-overdue hover:underline"
                       >
                         Remove
                       </button>
@@ -422,7 +422,7 @@ export function SettingsPage() {
                   {addLoading ? 'Adding…' : 'Add'}
                 </button>
               </form>
-              {addError && <p className="text-sm text-status-overdue-text mt-2">{addError}</p>}
+              {addError && <p className="text-sm text-status-overdue mt-2">{addError}</p>}
             </>
           )}
         </section>
