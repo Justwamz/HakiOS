@@ -48,32 +48,14 @@ export function Layout() {
   return (
     <div className="min-h-screen flex bg-background">
       <aside className="w-60 bg-primary flex flex-col shrink-0">
-        <div className="px-6 py-5 border-b border-white/10">
-          <span className="text-white font-semibold text-lg tracking-tight">HakiOS</span>
-          <p className="text-white/50 text-xs mt-0.5">Practice Management</p>
-        </div>
-        <nav className="flex-1 px-3 py-4 space-y-0.5">
-          {NAV_ITEMS.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.end}
-              className={({ isActive }) =>
-                `block px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  isActive
-                    ? 'bg-white/15 text-white'
-                    : 'text-white/70 hover:bg-white/10 hover:text-white'
-                }`
-              }
-            >
-              {item.label}
-            </NavLink>
-          ))}
-        </nav>
-        <div className="px-4 py-4 border-t border-white/10">
+        <div className="px-6 py-5 border-b border-white/10 flex items-start justify-between">
+          <div>
+            <span className="text-white font-semibold text-lg tracking-tight">HakiOS</span>
+            <p className="text-white/50 text-xs mt-0.5">Practice Management</p>
+          </div>
           <Link
             to="/notifications"
-            className="relative inline-flex items-center mb-3 text-white/70 hover:text-white transition-colors"
+            className="relative mt-0.5 text-white/70 hover:text-white transition-colors"
             aria-label="Notifications"
           >
             <svg
@@ -96,6 +78,26 @@ export function Layout() {
               </span>
             )}
           </Link>
+        </div>
+        <nav className="flex-1 px-3 py-4 space-y-0.5">
+          {NAV_ITEMS.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              end={item.end}
+              className={({ isActive }) =>
+                `block px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  isActive
+                    ? 'bg-white/15 text-white'
+                    : 'text-white/70 hover:bg-white/10 hover:text-white'
+                }`
+              }
+            >
+              {item.label}
+            </NavLink>
+          ))}
+        </nav>
+        <div className="px-4 py-4 border-t border-white/10">
           <p className="text-sm font-medium text-white truncate">
             {user?.firstName} {user?.lastName}
           </p>
