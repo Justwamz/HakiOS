@@ -18,6 +18,8 @@ import { InviteUserPage } from './pages/users/InviteUserPage'
 import { SettingsPage } from './pages/settings/SettingsPage'
 import { CalendarPage } from './pages/calendar/CalendarPage'
 import { CreateCalendarEventPage } from './pages/calendar/CreateCalendarEventPage'
+import { CalendarEventDetailPage } from './pages/calendar/CalendarEventDetailPage'
+import { CalendarEventEditPage } from './pages/calendar/CalendarEventEditPage'
 
 export const router = createBrowserRouter([
   { path: '/auth/login', element: <LoginPage /> },
@@ -39,6 +41,8 @@ export const router = createBrowserRouter([
       { path: 'matters/:id/edit', element: <MatterEditPage /> },
       { path: 'calendar', element: <CalendarPage /> },
       { path: 'calendar/new', element: <CreateCalendarEventPage /> },
+      { path: 'calendar/:id', element: <CalendarEventDetailPage /> },
+      { path: 'calendar/:id/edit', element: <CalendarEventEditPage /> },
       { path: 'users', element: <UsersPage /> },
       { path: 'users/invite', element: <InviteUserPage /> },
       { path: 'settings', element: <SettingsPage /> },
