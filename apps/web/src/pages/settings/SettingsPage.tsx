@@ -3,7 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useState, useEffect } from 'react'
 import { Navigate } from 'react-router-dom'
-import type { MatterTypeCode } from '@hakios/types'
+import type { MatterTypeCode, ReminderSchedule } from '@hakios/types'
 import { hasPermission } from '@hakios/types'
 import { api } from '../../lib/api'
 import { PageHeader } from '../../components/PageHeader'
@@ -59,6 +59,23 @@ export function SettingsPage() {
   const [typeError, setTypeError] = useState<string | null>(null)
   const [togglingCode, setTogglingCode] = useState<string | null>(null)
 
+  const EVENT_TYPE_OPTIONS = [
+    { value: 'court_hearing', label: 'Court Hearing' },
+    { value: 'filing_deadline', label: 'Filing Deadline' },
+    { value: 'submission_deadline', label: 'Submission Deadline' },
+    { value: 'mention', label: 'Mention' },
+    { value: 'client_meeting', label: 'Client Meeting' },
+    { value: 'internal_review', label: 'Internal Review' },
+  ]
+
+  const [schedules, setSchedules] = useState<ReminderSchedule[]>([])
+  const [scheduleLoading, setScheduleLoading] = useState(true)
+  const [scheduleError, setScheduleError] = useState<string | null>(null)
+  const [addEventType, setAddEventType] = useState('court_hearing')
+  const [addDaysBefore, setAddDaysBefore] = useState('3')
+  const [addError, setAddError] = useState<string | null>(null)
+  const [addLoading, setAddLoading] = useState(false)
+
   const firmForm = useForm<FirmForm>({ resolver: zodResolver(firmSchema) })
   const caseForm = useForm<CaseForm>({ resolver: zodResolver(caseSchema) })
   const typeForm = useForm<TypeForm>({ resolver: zodResolver(typeSchema) })
@@ -79,6 +96,12 @@ export function SettingsPage() {
       setError(err.message)
       setLoading(false)
     })
+  }, [])
+
+  useEffect(() => {
+    api<ReminderSchedule[]>('/settings/reminder-schedules')
+      .then(data => { setSchedules(data); setScheduleLoading(false) })
+      .catch(err => { setScheduleError((err as Error).message); setScheduleLoading(false) })
   }, [])
 
   // Permission guard — after all hooks
@@ -137,6 +160,33 @@ export function SettingsPage() {
       setTypeError((err as Error).message)
     } finally {
       setTogglingCode(null)
+    }
+  }
+
+  async function handleAddSchedule(e: React.FormEvent) {
+    e.preventDefault()
+    setAddLoading(true)
+    setAddError(null)
+    try {
+      const created = await api<ReminderSchedule>('/settings/reminder-schedules', {
+        method: 'POST',
+        body: JSON.stringify({ eventType: addEventType, daysBefore: Number(addDaysBefore) }),
+      })
+      setSchedules(prev => [...prev, created])
+      setAddDaysBefore('3')
+    } catch (err) {
+      setAddError((err as Error).message)
+    } finally {
+      setAddLoading(false)
+    }
+  }
+
+  async function handleDeleteSchedule(id: string) {
+    try {
+      await api(`/settings/reminder-schedules/${id}`, { method: 'DELETE' })
+      setSchedules(prev => prev.filter(s => s.id !== id))
+    } catch (err) {
+      setScheduleError((err as Error).message)
     }
   }
 
@@ -301,6 +351,80 @@ export function SettingsPage() {
               {typeForm.formState.isSubmitting ? 'Adding…' : 'Add type'}
             </button>
           </form>
+        </section>
+
+        {/* Reminder Schedules */}
+        <section>
+          <h2 className="text-lg font-semibold text-text-primary mb-4">Reminder Schedules</h2>
+          <p className="text-sm text-text-muted mb-4">
+            Configure how many days before each event type users receive a reminder notification.
+          </p>
+
+          {scheduleError && (
+            <p className="text-sm text-status-overdue-text mb-3">{scheduleError}</p>
+          )}
+
+          {scheduleLoading ? (
+            <p className="text-sm text-text-muted">Loading...</p>
+          ) : (
+            <>
+              {schedules.length === 0 ? (
+                <p className="text-sm text-text-muted mb-4">No reminder schedules configured.</p>
+              ) : (
+                <ul className="divide-y divide-border border border-border rounded-lg mb-4">
+                  {schedules.map(s => (
+                    <li key={s.id} className="flex items-center justify-between px-4 py-3">
+                      <span className="text-sm text-text-primary">
+                        {EVENT_TYPE_OPTIONS.find(o => o.value === s.eventType)?.label ?? s.eventType}
+                        {' — '}
+                        <span className="font-medium">{s.daysBefore} day{s.daysBefore !== 1 ? 's' : ''} before</span>
+                      </span>
+                      <button
+                        onClick={() => handleDeleteSchedule(s.id)}
+                        className="text-xs text-status-overdue-text hover:underline"
+                      >
+                        Remove
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              <form onSubmit={handleAddSchedule} className="flex items-end gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-text-muted mb-1">Event Type</label>
+                  <select
+                    value={addEventType}
+                    onChange={e => setAddEventType(e.target.value)}
+                    className="border border-border rounded-md px-3 py-2 text-sm bg-background text-text-primary"
+                  >
+                    {EVENT_TYPE_OPTIONS.map(o => (
+                      <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-text-muted mb-1">Days Before</label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={365}
+                    value={addDaysBefore}
+                    onChange={e => setAddDaysBefore(e.target.value)}
+                    className="border border-border rounded-md px-3 py-2 text-sm bg-background text-text-primary w-24"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={addLoading}
+                  className="bg-primary hover:bg-primary-light text-white text-sm font-medium px-4 py-2 rounded-lg transition disabled:opacity-60"
+                >
+                  {addLoading ? 'Adding…' : 'Add'}
+                </button>
+              </form>
+              {addError && <p className="text-sm text-status-overdue-text mt-2">{addError}</p>}
+            </>
+          )}
         </section>
 
       </div>

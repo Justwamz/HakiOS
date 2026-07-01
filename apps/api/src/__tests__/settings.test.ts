@@ -136,3 +136,73 @@ describe('PATCH /api/settings/matter-types/:code', () => {
     expect((res.body as Record<string, unknown>)['isActive']).toBe(false)
   })
 })
+
+describe('Reminder Schedules', () => {
+  let createdScheduleId: string
+
+  afterAll(async () => {
+    if (createdScheduleId) {
+      await db.query('DELETE FROM reminder_schedules WHERE id = $1', [createdScheduleId])
+    }
+  })
+
+  it('GET /api/settings/reminder-schedules returns an array', async () => {
+    const res = await request(app)
+      .get('/api/settings/reminder-schedules')
+      .set('Authorization', `Bearer ${adminToken}`)
+    expect(res.status).toBe(200)
+    expect(Array.isArray(res.body)).toBe(true)
+  })
+
+  it('POST /api/settings/reminder-schedules creates a schedule', async () => {
+    const res = await request(app)
+      .post('/api/settings/reminder-schedules')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ eventType: 'court_hearing', daysBefore: 3 })
+    // 201 or 409 if it already exists
+    expect([201, 409]).toContain(res.status)
+    if (res.status === 201) {
+      expect((res.body as Record<string, unknown>)['eventType']).toBe('court_hearing')
+      expect((res.body as Record<string, unknown>)['daysBefore']).toBe(3)
+      expect((res.body as Record<string, unknown>)['createdAt']).toBeDefined()
+      createdScheduleId = (res.body as Record<string, unknown>)['id'] as string
+    }
+  })
+
+  it('POST /api/settings/reminder-schedules returns 409 on duplicate', async () => {
+    // Create first
+    const r1 = await request(app)
+      .post('/api/settings/reminder-schedules')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ eventType: 'filing_deadline', daysBefore: 7 })
+    if (r1.status === 201) {
+      await db.query('DELETE FROM reminder_schedules WHERE id = $1', [(r1.body as Record<string, unknown>)['id']])
+    }
+    // Ensure it exists
+    await db.query(
+      `INSERT INTO reminder_schedules (event_type, days_before) VALUES ('filing_deadline', 7)
+       ON CONFLICT DO NOTHING`,
+    )
+    const r2 = await request(app)
+      .post('/api/settings/reminder-schedules')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ eventType: 'filing_deadline', daysBefore: 7 })
+    expect(r2.status).toBe(409)
+    await db.query(
+      `DELETE FROM reminder_schedules WHERE event_type = 'filing_deadline' AND days_before = 7`,
+    )
+  })
+
+  it('DELETE /api/settings/reminder-schedules/:id deletes a schedule', async () => {
+    const { rows } = await db.query<Record<string, unknown>>(
+      `INSERT INTO reminder_schedules (event_type, days_before) VALUES ('mention', 1) RETURNING id`,
+    )
+    const r = rows[0]
+    if (!r) throw new Error('Setup failed')
+    const id = r['id'] as string
+    const res = await request(app)
+      .delete(`/api/settings/reminder-schedules/${id}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+    expect(res.status).toBe(204)
+  })
+})

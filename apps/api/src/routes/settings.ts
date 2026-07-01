@@ -4,7 +4,7 @@ import { requireAuth } from '../middleware/requireAuth.js'
 import { requireRole } from '../middleware/requireRole.js'
 import { db } from '../db/client.js'
 import { createError } from '../middleware/errorHandler.js'
-import type { CaseNumberSettings, FirmProfile, MatterTypeCode } from '@hakios/types'
+import type { CaseNumberSettings, FirmProfile, MatterTypeCode, ReminderSchedule } from '@hakios/types'
 
 export const settingsRouter = Router()
 
@@ -151,6 +151,74 @@ settingsRouter.patch('/matter-types/:code', requireAuth, requireRole('settings:m
       isActive: r['is_active'],
       createdAt: (r['created_at'] as Date).toISOString(),
     } as MatterTypeCode)
+  } catch (err) {
+    next(err)
+  }
+})
+
+function toReminderSchedule(r: Record<string, unknown>): ReminderSchedule {
+  return {
+    id: r['id'] as string,
+    eventType: r['event_type'] as string,
+    daysBefore: r['days_before'] as number,
+    createdAt: (r['created_at'] as Date).toISOString(),
+  }
+}
+
+settingsRouter.get('/reminder-schedules', requireAuth, async (_req, res, next) => {
+  try {
+    const { rows } = await db.query(
+      'SELECT id, event_type, days_before, created_at FROM reminder_schedules ORDER BY event_type, days_before',
+    )
+    res.json(rows.map(toReminderSchedule))
+  } catch (err) {
+    next(err)
+  }
+})
+
+const reminderScheduleSchema = z.object({
+  eventType: z.enum([
+    'court_hearing',
+    'filing_deadline',
+    'submission_deadline',
+    'mention',
+    'client_meeting',
+    'internal_review',
+  ]),
+  daysBefore: z.number().int().min(1).max(365),
+})
+
+settingsRouter.post('/reminder-schedules', requireAuth, requireRole('settings:manage'), async (req, res, next) => {
+  try {
+    const result = reminderScheduleSchema.safeParse(req.body)
+    if (!result.success) {
+      return next(
+        createError(result.error.errors[0]?.message ?? 'Validation error', 400, 'VALIDATION_ERROR'),
+      )
+    }
+    const { rows } = await db.query<Record<string, unknown>>(
+      `INSERT INTO reminder_schedules (event_type, days_before)
+       VALUES ($1, $2)
+       ON CONFLICT (event_type, days_before) DO NOTHING
+       RETURNING id, event_type, days_before, created_at`,
+      [result.data.eventType, result.data.daysBefore],
+    )
+    const r = rows[0]
+    if (!r) return next(createError('Schedule already exists', 409, 'CONFLICT'))
+    res.status(201).json(toReminderSchedule(r))
+  } catch (err) {
+    next(err)
+  }
+})
+
+settingsRouter.delete('/reminder-schedules/:id', requireAuth, requireRole('settings:manage'), async (req, res, next) => {
+  try {
+    const { rowCount } = await db.query(
+      'DELETE FROM reminder_schedules WHERE id = $1',
+      [req.params['id']],
+    )
+    if ((rowCount ?? 0) === 0) return next(createError('Schedule not found', 404, 'NOT_FOUND'))
+    res.status(204).end()
   } catch (err) {
     next(err)
   }

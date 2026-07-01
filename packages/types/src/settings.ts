@@ -17,6 +17,7 @@ export interface ReminderSchedule {
   id: string
   eventType: string
   daysBefore: number
+  createdAt: string
 }
 
 export interface SystemSettings {
