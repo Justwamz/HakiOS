@@ -26,7 +26,7 @@ const createSchema = z.object({
   assigneeIds: z.array(z.string().uuid()).optional(),
   supervisingPartnerId: z.string().uuid().optional(),
   notes: z.string().max(2000).optional(),
-  recurrence: z.enum(['none', 'weekly', 'monthly', 'custom']).optional(),
+  recurrence: z.enum(['none', 'weekly', 'monthly']).optional(),
 })
 
 const updateSchema = z.object({

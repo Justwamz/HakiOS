@@ -1,4 +1,5 @@
 import { db } from '../db/client.js'
+import type { PoolClient } from 'pg'
 import type {
   CalendarEvent,
   CreateCalendarEventInput,
@@ -107,9 +108,9 @@ function addMonths(dateStr: string, n: number): string {
   return d.toISOString().slice(0, 10)
 }
 
-async function insertAssignees(eventId: string, assigneeIds: string[]): Promise<void> {
+async function insertAssignees(pgClient: PoolClient, eventId: string, assigneeIds: string[]): Promise<void> {
   if (assigneeIds.length === 0) return
-  await db.query(
+  await pgClient.query(
     `INSERT INTO event_assignees (event_id, user_id) SELECT $1, UNNEST($2::uuid[])`,
     [eventId, assigneeIds],
   )
@@ -119,65 +120,77 @@ export async function createEvent(
   input: CreateCalendarEventInput,
   createdBy: string,
 ): Promise<CalendarEvent> {
-  const { rows } = await db.query<Record<string, unknown>>(
-    `INSERT INTO calendar_events
-       (event_type, title, matter_id, date, time, supervising_partner_id, notes, recurrence, created_by)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-     RETURNING id`,
-    [
-      input.eventType,
-      input.title,
-      input.matterId,
-      input.date,
-      input.time ?? null,
-      input.supervisingPartnerId ?? null,
-      input.notes ?? null,
-      input.recurrence ?? 'none',
-      createdBy,
-    ],
-  )
-  const row = rows[0]
-  if (!row) throw new Error('Insert failed')
-  const parentId = row['id'] as string
+  const pgClient = await db.connect()
+  let parentId: string | undefined
+  try {
+    await pgClient.query('BEGIN')
+    const { rows } = await pgClient.query<Record<string, unknown>>(
+      `INSERT INTO calendar_events
+         (event_type, title, matter_id, date, time, supervising_partner_id, notes, recurrence, created_by)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+       RETURNING id`,
+      [
+        input.eventType,
+        input.title,
+        input.matterId,
+        input.date,
+        input.time ?? null,
+        input.supervisingPartnerId ?? null,
+        input.notes ?? null,
+        input.recurrence ?? 'none',
+        createdBy,
+      ],
+    )
+    const row = rows[0]
+    if (!row) throw new Error('Insert failed')
+    parentId = row['id'] as string
 
-  await insertAssignees(parentId, input.assigneeIds ?? [])
+    await insertAssignees(pgClient, parentId, input.assigneeIds ?? [])
 
-  const recurrence = input.recurrence
-  if (recurrence === 'weekly' || recurrence === 'monthly') {
-    for (let n = 1; n <= 11; n++) {
-      const date =
-        recurrence === 'weekly' ? addDays(input.date, n * 7) : addMonths(input.date, n)
-      const { rows: cr } = await db.query<Record<string, unknown>>(
-        `INSERT INTO calendar_events
-           (event_type, title, matter_id, date, time, supervising_partner_id,
-            notes, recurrence, recurrence_parent_id, created_by)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-         RETURNING id`,
-        [
-          input.eventType,
-          input.title,
-          input.matterId,
-          date,
-          input.time ?? null,
-          input.supervisingPartnerId ?? null,
-          input.notes ?? null,
-          recurrence,
-          parentId,
-          createdBy,
-        ],
-      )
-      const cr0 = cr[0]
-      if (cr0) await insertAssignees(cr0['id'] as string, input.assigneeIds ?? [])
+    const recurrence = input.recurrence
+    if (recurrence === 'weekly' || recurrence === 'monthly') {
+      for (let n = 1; n <= 11; n++) {
+        const date =
+          recurrence === 'weekly' ? addDays(input.date, n * 7) : addMonths(input.date, n)
+        const { rows: cr } = await pgClient.query<Record<string, unknown>>(
+          `INSERT INTO calendar_events
+             (event_type, title, matter_id, date, time, supervising_partner_id,
+              notes, recurrence, recurrence_parent_id, created_by)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+           RETURNING id`,
+          [
+            input.eventType,
+            input.title,
+            input.matterId,
+            date,
+            input.time ?? null,
+            input.supervisingPartnerId ?? null,
+            input.notes ?? null,
+            recurrence,
+            parentId,
+            createdBy,
+          ],
+        )
+        const cr0 = cr[0]
+        if (cr0) await insertAssignees(pgClient, cr0['id'] as string, input.assigneeIds ?? [])
+      }
     }
+
+    await pgClient.query(
+      `INSERT INTO matter_timeline (matter_id, event_type, description, created_by)
+       VALUES ($1, 'event_linked', $2, $3)`,
+      [input.matterId, `Event "${input.title}" linked to matter`, createdBy],
+    )
+
+    await pgClient.query('COMMIT')
+  } catch (err) {
+    await pgClient.query('ROLLBACK')
+    throw err
+  } finally {
+    pgClient.release()
   }
 
-  await db.query(
-    `INSERT INTO matter_timeline (matter_id, event_type, description, created_by)
-     VALUES ($1, 'event_linked', $2, $3)`,
-    [input.matterId, `Event "${input.title}" linked to matter`, createdBy],
-  )
-
-  const created = await getEvent(parentId)
+  const created = await getEvent(parentId!)
   if (!created) throw new Error('Event not found after insert')
   return created
 }
@@ -215,17 +228,26 @@ export async function updateEvent(
     params.push(input.notes ?? null)
   }
 
-  if (setClauses.length > 1) {
-    params.push(id)
-    await db.query(
-      `UPDATE calendar_events SET ${setClauses.join(', ')} WHERE id = $${i}`,
-      params,
-    )
-  }
-
-  if (input.assigneeIds !== undefined) {
-    await db.query('DELETE FROM event_assignees WHERE event_id = $1', [id])
-    await insertAssignees(id, input.assigneeIds)
+  const pgClient = await db.connect()
+  try {
+    await pgClient.query('BEGIN')
+    if (setClauses.length > 1) {
+      params.push(id)
+      await pgClient.query(
+        `UPDATE calendar_events SET ${setClauses.join(', ')} WHERE id = $${i}`,
+        params,
+      )
+    }
+    if (input.assigneeIds !== undefined) {
+      await pgClient.query('DELETE FROM event_assignees WHERE event_id = $1', [id])
+      await insertAssignees(pgClient, id, input.assigneeIds)
+    }
+    await pgClient.query('COMMIT')
+  } catch (err) {
+    await pgClient.query('ROLLBACK')
+    throw err
+  } finally {
+    pgClient.release()
   }
 
   return getEvent(id)
@@ -242,6 +264,26 @@ export async function resolveEvent(id: string): Promise<CalendarEvent | null> {
 }
 
 export async function deleteEvent(id: string): Promise<boolean> {
-  const { rowCount } = await db.query('DELETE FROM calendar_events WHERE id = $1', [id])
-  return (rowCount ?? 0) > 0
+  const pgClient = await db.connect()
+  try {
+    await pgClient.query('BEGIN')
+    // Remove notifications for this event and its children
+    await pgClient.query(
+      `DELETE FROM notifications
+       WHERE event_id = $1
+          OR event_id IN (SELECT id FROM calendar_events WHERE recurrence_parent_id = $1)`,
+      [id],
+    )
+    // Remove child events (event_assignees cascade automatically)
+    await pgClient.query('DELETE FROM calendar_events WHERE recurrence_parent_id = $1', [id])
+    // Remove the event itself (event_assignees cascade automatically)
+    const { rowCount } = await pgClient.query('DELETE FROM calendar_events WHERE id = $1', [id])
+    await pgClient.query('COMMIT')
+    return (rowCount ?? 0) > 0
+  } catch (err) {
+    await pgClient.query('ROLLBACK')
+    throw err
+  } finally {
+    pgClient.release()
+  }
 }

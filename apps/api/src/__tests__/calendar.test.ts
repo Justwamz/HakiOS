@@ -228,4 +228,47 @@ describe('DELETE /api/calendar/:id', () => {
       .set('Authorization', `Bearer ${adminToken}`)
     expect(check.status).toBe(404)
   })
+
+  it('deletes a recurring parent and all its children', async () => {
+    // Create a weekly recurring event (produces 12 instances: 1 parent + 11 children)
+    const create = await request(app)
+      .post('/api/calendar')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        eventType: 'mention',
+        title: 'Recurring To Delete',
+        matterId,
+        date: '2026-08-01',
+        recurrence: 'weekly',
+      })
+    expect(create.status).toBe(201)
+    const parentId = create.body.id as string
+
+    // Verify children were created
+    const { rows: before } = await db.query(
+      `SELECT id FROM calendar_events WHERE recurrence_parent_id = $1`,
+      [parentId],
+    )
+    expect(before.length).toBeGreaterThan(0)
+    const childId = (before[0] as { id: string }).id
+
+    // Delete the parent
+    const del = await request(app)
+      .delete(`/api/calendar/${parentId}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+    expect(del.status).toBe(204)
+
+    // Parent should be gone
+    const checkParent = await request(app)
+      .get(`/api/calendar/${parentId}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+    expect(checkParent.status).toBe(404)
+
+    // At least one child should also be gone
+    const { rows: after } = await db.query(
+      `SELECT id FROM calendar_events WHERE id = $1`,
+      [childId],
+    )
+    expect(after.length).toBe(0)
+  })
 })
