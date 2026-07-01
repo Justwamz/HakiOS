@@ -7,6 +7,7 @@ import { hasPermission } from '@hakios/types'
 export function Layout() {
   const { user, refreshToken, clearAuth } = useAuthStore()
   const navigate = useNavigate()
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const canManageUsers = user ? hasPermission(user.role, 'users:manage') : false
   const canManageSettings = user ? hasPermission(user.role, 'settings:manage') : false
@@ -47,7 +48,19 @@ export function Layout() {
 
   return (
     <div className="min-h-screen flex bg-background">
-      <aside className="w-60 bg-primary flex flex-col shrink-0">
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 w-60 bg-primary flex flex-col shrink-0 transition-transform duration-200 ease-in-out md:relative md:translate-x-0 md:z-auto ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
         <div className="px-6 py-5 border-b border-white/10">
           <span className="text-white font-semibold text-lg tracking-tight">HakiOS</span>
           <p className="text-white/50 text-xs mt-0.5">Practice Management</p>
@@ -58,6 +71,7 @@ export function Layout() {
               key={item.to}
               to={item.to}
               end={item.end}
+              onClick={() => setSidebarOpen(false)}
               className={({ isActive }) =>
                 `block px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                   isActive
@@ -83,8 +97,19 @@ export function Layout() {
           </button>
         </div>
       </aside>
-      <main className="flex-1 flex flex-col overflow-hidden">
-        <header className="flex items-center justify-end px-6 py-3 border-b border-border bg-background shrink-0">
+
+      <main className="flex-1 flex flex-col overflow-hidden min-w-0">
+        <header className="flex items-center px-4 md:px-6 py-3 border-b border-border bg-background shrink-0 gap-3">
+          <button
+            className="md:hidden p-1 -ml-1 text-text-muted hover:text-text-primary transition-colors"
+            onClick={() => setSidebarOpen(true)}
+            aria-label="Open navigation menu"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+          <div className="flex-1" />
           <Link
             to="/notifications"
             className="relative text-text-muted hover:text-text-primary transition-colors"
