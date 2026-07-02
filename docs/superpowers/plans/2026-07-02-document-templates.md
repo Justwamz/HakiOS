@@ -1511,13 +1511,20 @@ git push origin master
 
 - [ ] **Step 1: Add `FormData` support to the `api()` helper**
 
-In `apps/web/src/lib/api.ts`, modify the `api<T>` function so it doesn't force JSON headers when the body is `FormData` (the browser sets the correct multipart boundary itself):
+In `apps/web/src/lib/api.ts`, modify only the header-building logic in `api<T>` so it doesn't force JSON headers when the body is `FormData` (the browser sets the correct multipart boundary itself) — replace this block:
 
 ```typescript
-export async function api<T = unknown>(
-  path: string,
-  options: RequestInit = {},
-): Promise<T> {
+  const token = await getValidToken()
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options.headers as Record<string, string>),
+  }
+  if (token) headers['Authorization'] = `Bearer ${token}`
+```
+
+with:
+
+```typescript
   const token = await getValidToken()
   const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData
   const headers: Record<string, string> = {
@@ -1525,22 +1532,9 @@ export async function api<T = unknown>(
     ...(options.headers as Record<string, string>),
   }
   if (token) headers['Authorization'] = `Bearer ${token}`
-
-  const res = await fetch(`${BASE}${path}`, { ...options, headers })
-
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({ error: 'Something went wrong. Please check your connection and try again.' })) as { error?: string }
-    const err = new Error(body.error ?? 'Something went wrong. Please check your connection and try again.') as Error & { status: number }
-    err.status = res.status
-    throw err
-  }
-
-  if (res.status === 204) return undefined as T
-  return res.json() as Promise<T>
-}
 ```
 
-This changes the `'Unknown error'`/`'Request failed'` fallbacks to plain English per the app-wide error message standard, and adds the `FormData` branch — everything else in the file is unchanged.
+Leave the rest of the function (the error-fallback text below this block) untouched here — that text is updated separately by the `2026-07-02-error-message-cleanup.md` plan, which may run before or after this one.
 
 - [ ] **Step 2: Create `TemplatesLibraryPage.tsx`**
 
