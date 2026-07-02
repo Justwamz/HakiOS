@@ -5,7 +5,7 @@ import { createError } from './errorHandler.js'
 export function requireAuth(req: Request, _res: Response, next: NextFunction): void {
   const header = req.headers['authorization']
   if (!header?.startsWith('Bearer ')) {
-    return next(createError('Authentication required', 401, 'UNAUTHENTICATED'))
+    return next(createError('Please sign in to continue.', 401, 'UNAUTHENTICATED'))
   }
 
   const token = header.slice(7)
@@ -14,6 +14,6 @@ export function requireAuth(req: Request, _res: Response, next: NextFunction): v
     req.user = { id: payload.sub, role: payload.role }
     next()
   } catch {
-    next(createError('Invalid or expired token', 401, 'INVALID_TOKEN'))
+    next(createError('Your session has expired. Please sign in again.', 401, 'INVALID_TOKEN'))
   }
 }

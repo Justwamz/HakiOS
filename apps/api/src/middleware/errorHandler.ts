@@ -12,7 +12,9 @@ export function errorHandler(
   _next: NextFunction,
 ): void {
   const statusCode = err.statusCode ?? 500
-  const message = statusCode < 500 ? err.message : 'Internal server error'
+  const message = statusCode < 500
+    ? err.message
+    : 'Something went wrong on our end. Please try again, and contact support if it keeps happening.'
 
   if (statusCode >= 500) {
     console.error(err)
@@ -22,7 +24,7 @@ export function errorHandler(
 }
 
 export function notFound(_req: Request, res: Response): void {
-  res.status(404).json({ error: 'Not found' })
+  res.status(404).json({ error: 'We couldn\'t find what you were looking for. Please refresh the page and try again.' })
 }
 
 export function createError(message: string, statusCode: number, code?: string): AppError {

@@ -4,13 +4,14 @@ import { emailSchema, passwordSchema } from '@hakios/utils'
 import * as authService from '../services/auth.js'
 import { requireAuth } from '../middleware/requireAuth.js'
 import { createError } from '../middleware/errorHandler.js'
+import { friendlyZodMessage } from '../lib/friendlyError.js'
 
 export const authRouter = Router()
 
 function validate<T>(schema: z.ZodType<T>, data: unknown): T {
   const result = schema.safeParse(data)
   if (!result.success) {
-    throw createError(result.error.errors[0]?.message ?? 'Validation error', 400, 'VALIDATION_ERROR')
+    throw createError(friendlyZodMessage(result.error), 400, 'VALIDATION_ERROR')
   }
   return result.data
 }
