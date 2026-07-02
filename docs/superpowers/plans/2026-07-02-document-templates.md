@@ -18,7 +18,7 @@
 - `as Error` in catch blocks — project convention
 - Integration tests require a live PostgreSQL DB — `ECONNREFUSED` expected locally; this is a pre-existing constraint, not a bug
 - All new user-facing error messages must be plain English with no jargon (see `docs/superpowers/specs/2026-07-02-document-templates-design.md` Section 8) — exact wording is specified per error case below, use it verbatim
-- Push to `origin/master` after every commit to trigger Render deployment
+- Commit after every task. Do not push to `origin/master` — this plan is executed in an isolated worktree; pushing/merging happens once, at the end, via the finishing-a-development-branch process
 
 ---
 
@@ -237,7 +237,6 @@ Expected: 0 errors (the new fields/types are additive).
 ```bash
 git add apps/api/src/db/migrations/003_document_templates.sql packages/types/src/template.ts packages/types/src/settings.ts packages/types/src/permissions.ts packages/types/src/index.ts
 git commit -m "feat: document template schema, types, and permissions"
-git push origin master
 ```
 
 ---
@@ -326,7 +325,6 @@ Expected: 0 errors.
 ```bash
 git add apps/api/package.json apps/api/package-lock.json apps/api/src/lib/r2.ts
 git commit -m "feat: add R2 storage wrapper and docx/upload dependencies"
-git push origin master
 ```
 
 ---
@@ -567,7 +565,6 @@ Expected: 0 errors.
 ```bash
 git add apps/api/src/services/settings.ts apps/api/src/routes/settings.ts apps/api/src/__tests__/settings.test.ts
 git commit -m "feat: firm logo upload endpoint"
-git push origin master
 ```
 
 ---
@@ -1113,7 +1110,6 @@ Expected: 0 errors.
 ```bash
 git add apps/api/src/services/templates.ts apps/api/src/__tests__/templates.test.ts apps/api/src/__tests__/fixtures/sample-template.docx
 git commit -m "feat: document templates service (CRUD, versioning, generation)"
-git push origin master
 ```
 
 ---
@@ -1491,7 +1487,6 @@ Expected: 0 errors.
 ```bash
 git add apps/api/src/routes/templates.ts apps/api/src/routes/documents.ts apps/api/src/routes/index.ts apps/api/src/__tests__/templates.test.ts
 git commit -m "feat: templates and generated-documents API routes"
-git push origin master
 ```
 
 ---
@@ -1954,7 +1949,6 @@ Expected: 0 errors.
 ```bash
 git add apps/web/src/lib/api.ts apps/web/src/pages/templates apps/web/src/router.tsx apps/web/src/components/Layout.tsx
 git commit -m "feat: template library, upload, and version-history pages"
-git push origin master
 ```
 
 ---
@@ -2251,7 +2245,6 @@ Expected: 0 errors.
 ```bash
 git add apps/web/src/components/GeneratedDocumentsSection.tsx apps/web/src/pages/templates/GenerateDocumentPage.tsx apps/web/src/pages/clients/ClientDetailPage.tsx apps/web/src/pages/matters/MatterDetailPage.tsx apps/web/src/router.tsx
 git commit -m "feat: generate-document flow from client and matter detail pages"
-git push origin master
 ```
 
 ---
@@ -2371,7 +2364,6 @@ Expected: 0 errors.
 ```bash
 git add apps/web/src/pages/settings/SettingsPage.tsx
 git commit -m "feat: firm logo upload in Settings"
-git push origin master
 ```
 
 ---

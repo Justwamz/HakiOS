@@ -13,7 +13,7 @@
 - Every message must read like something you'd say out loud to a non-technical staff member explaining what to do next — never a field name in camelCase, an HTTP-status word, or a raw Zod message
 - `apps/api/src/services/auth.ts`'s `'Invalid email or password'` (login failure) stays exactly as-is — it's intentionally non-specific for security (doesn't reveal whether the email exists)
 - This plan only touches backend error strings. No existing test in the repo asserts on any of the old strings being replaced (verified by grep before writing this plan), so no test files need their assertions updated — only new assertions are added where noted
-- Push to `origin/master` after every commit to trigger Render deployment
+- Commit after every task. Do not push to `origin/master` — this plan is executed in an isolated worktree; pushing/merging happens once, at the end, via the finishing-a-development-branch process
 - This plan is independent of `2026-07-02-document-templates.md` and can run before, after, or interleaved with it — the only shared file is `apps/api/src/routes/settings.ts`, and Task 5 here only touches routes below the `GET /` handler, which the templates plan explicitly leaves untouched
 
 ---
@@ -279,7 +279,6 @@ Expected: 0 errors.
 ```bash
 git add apps/api/src/lib/friendlyError.ts apps/api/src/__tests__/friendlyError.test.ts apps/api/src/routes/auth.ts apps/api/src/middleware/requireAuth.ts apps/api/src/middleware/requireRole.ts apps/api/src/middleware/errorHandler.ts
 git commit -m "fix: plain-English auth, permission, and validation error messages"
-git push origin master
 ```
 
 ---
@@ -361,7 +360,6 @@ Expected: 0 errors.
 ```bash
 git add apps/api/src/services/auth.ts
 git commit -m "fix: plain-English auth token expiry messages"
-git push origin master
 ```
 
 ---
@@ -553,7 +551,6 @@ Expected: 0 errors.
 ```bash
 git add apps/api/src/routes/clients.ts apps/api/src/routes/matters.ts apps/api/src/services/matters.ts apps/api/src/routes/push.ts
 git commit -m "fix: plain-English error messages for clients, matters, and push routes"
-git push origin master
 ```
 
 ---
@@ -659,7 +656,6 @@ Expected: 0 errors.
 ```bash
 git add apps/api/src/routes/calendar.ts
 git commit -m "fix: plain-English error messages for calendar routes"
-git push origin master
 ```
 
 ---
@@ -793,7 +789,6 @@ Expected: 0 errors.
 ```bash
 git add apps/api/src/routes/settings.ts apps/api/src/routes/users.ts
 git commit -m "fix: plain-English error messages for settings and users routes"
-git push origin master
 ```
 
 ---
@@ -842,7 +837,6 @@ Expected: 0 errors.
 ```bash
 git add apps/web/src/lib/api.ts
 git commit -m "fix: plain-English fallback error text on the frontend"
-git push origin master
 ```
 
 - [ ] **Step 4: Run the full backend test suite**
