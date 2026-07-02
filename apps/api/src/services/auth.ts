@@ -57,7 +57,7 @@ export async function refresh(refreshToken: string): Promise<AuthTokens> {
   try {
     payload = verifyRefreshToken(refreshToken)
   } catch {
-    throw createError('Invalid or expired refresh token', 401, 'INVALID_REFRESH_TOKEN')
+    throw createError('Your session has expired. Please sign in again.', 401, 'INVALID_REFRESH_TOKEN')
   }
 
   const hash = crypto.createHash('sha256').update(refreshToken).digest('hex')
@@ -65,14 +65,14 @@ export async function refresh(refreshToken: string): Promise<AuthTokens> {
     'SELECT id FROM refresh_tokens WHERE user_id = $1 AND token_hash = $2 AND expires_at > now()',
     [payload.sub, hash],
   )
-  if (rows.length === 0) throw createError('Refresh token not found', 401, 'INVALID_REFRESH_TOKEN')
+  if (rows.length === 0) throw createError('Your session has expired. Please sign in again.', 401, 'INVALID_REFRESH_TOKEN')
 
   const { rows: userRows } = await db.query(
     'SELECT role FROM users WHERE id = $1 AND is_active = true',
     [payload.sub],
   )
   const userRow = userRows[0] as { role: Role } | undefined
-  if (!userRow) throw createError('User not found', 401, 'INVALID_REFRESH_TOKEN')
+  if (!userRow) throw createError('Your session has expired. Please sign in again.', 401, 'INVALID_REFRESH_TOKEN')
 
   const newAccessToken = signAccessToken(payload.sub, userRow.role)
   const newRefreshToken = signRefreshToken(payload.sub)
@@ -146,7 +146,7 @@ export async function confirmPasswordReset(token: string, newPassword: string): 
       [hash],
     )
     const row = rows[0] as { id: string; user_id: string } | undefined
-    if (!row) throw createError('Invalid or expired reset token', 400, 'INVALID_RESET_TOKEN')
+    if (!row) throw createError('This password reset link has expired or is invalid. Please request a new one.', 400, 'INVALID_RESET_TOKEN')
 
     const passwordHash = await hashPassword(newPassword)
     await client.query('UPDATE users SET password_hash = $1, updated_at = now() WHERE id = $2', [
@@ -214,7 +214,7 @@ export async function acceptInvite(
       [hash],
     )
     const row = rows[0] as { id: string; user_id: string } | undefined
-    if (!row) throw createError('Invalid or expired invite token', 400, 'INVALID_INVITE_TOKEN')
+    if (!row) throw createError('This invitation link has expired or is invalid. Please contact your administrator for a new invite.', 400, 'INVALID_INVITE_TOKEN')
 
     userId = row.user_id
     const passwordHash = await hashPassword(password)
