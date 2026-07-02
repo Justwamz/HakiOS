@@ -109,7 +109,7 @@ async function getCaseNumberSettings(pgClient: PoolClient): Promise<CaseNumberSe
   const { rows } = await pgClient.query<{ value: CaseNumberSettings }>(
     `SELECT value FROM settings WHERE key = 'case_number'`,
   )
-  if (!rows[0]) throw createError('Case number settings not configured', 500)
+  if (!rows[0]) throw createError('Case numbering hasn’t been set up yet. Ask an admin to set it up in Settings before creating a matter.', 500)
   return rows[0].value
 }
 

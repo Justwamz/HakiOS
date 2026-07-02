@@ -4,6 +4,7 @@ import { hasPermission } from '@hakios/types'
 import { requireAuth } from '../middleware/requireAuth.js'
 import { requireRole } from '../middleware/requireRole.js'
 import { createError } from '../middleware/errorHandler.js'
+import { friendlyZodMessage } from '../lib/friendlyError.js'
 import * as mattersService from '../services/matters.js'
 import { db } from '../db/client.js'
 
@@ -74,13 +75,13 @@ mattersRouter.get('/types', requireAuth, async (_req, res, next) => {
 mattersRouter.get('/', requireAuth, async (req, res, next) => {
   try {
     const user = req.user
-    if (!user) return next(createError('Unauthorized', 401, 'UNAUTHORIZED'))
+    if (!user) return next(createError('Please sign in to continue.', 401, 'UNAUTHORIZED'))
     const canReadAll = hasPermission(user.role, 'matters:read_all')
     if (!canReadAll && !hasPermission(user.role, 'matters:read_assigned')) {
-      return next(createError('Insufficient permissions', 403, 'FORBIDDEN'))
+      return next(createError('You don’t have permission to do this. Please contact your administrator.', 403, 'FORBIDDEN'))
     }
     const parsed = listQuerySchema.safeParse(req.query)
-    if (!parsed.success) return next(createError('Invalid query parameters', 400))
+    if (!parsed.success) return next(createError(friendlyZodMessage(parsed.error), 400, 'VALIDATION_ERROR'))
     const result = await mattersService.listMatters({ ...parsed.data, userId: user.id, canReadAll })
     res.json(result)
   } catch (err) {
@@ -91,9 +92,9 @@ mattersRouter.get('/', requireAuth, async (req, res, next) => {
 mattersRouter.post('/', requireAuth, requireRole('matters:create'), async (req, res, next) => {
   try {
     const user = req.user
-    if (!user) return next(createError('Unauthorized', 401, 'UNAUTHORIZED'))
+    if (!user) return next(createError('Please sign in to continue.', 401, 'UNAUTHORIZED'))
     const parsed = createSchema.safeParse(req.body)
-    if (!parsed.success) return next(createError('Invalid request body', 400))
+    if (!parsed.success) return next(createError(friendlyZodMessage(parsed.error), 400, 'VALIDATION_ERROR'))
     const matter = await mattersService.createMatter(parsed.data, user.id)
     res.status(201).json(matter)
   } catch (err) {
@@ -104,13 +105,13 @@ mattersRouter.post('/', requireAuth, requireRole('matters:create'), async (req, 
 mattersRouter.get('/:id', requireAuth, async (req, res, next) => {
   try {
     const user = req.user
-    if (!user) return next(createError('Unauthorized', 401, 'UNAUTHORIZED'))
+    if (!user) return next(createError('Please sign in to continue.', 401, 'UNAUTHORIZED'))
     const id = req.params['id']
-    if (!id) return next(createError('Missing id', 400, 'BAD_REQUEST'))
+    if (!id) return next(createError('We couldn’t find what you were looking for. Please refresh the page and try again.', 400, 'BAD_REQUEST'))
     const matter = await mattersService.getMatter(id)
     if (!hasPermission(user.role, 'matters:read_all')) {
       const ok = await mattersService.userCanAccessMatter(user.id, matter.id)
-      if (!ok) return next(createError('Insufficient permissions', 403, 'FORBIDDEN'))
+      if (!ok) return next(createError('You don’t have permission to do this. Please contact your administrator.', 403, 'FORBIDDEN'))
     }
     res.json(matter)
   } catch (err) {
@@ -121,14 +122,14 @@ mattersRouter.get('/:id', requireAuth, async (req, res, next) => {
 mattersRouter.put('/:id', requireAuth, requireRole('matters:edit'), async (req, res, next) => {
   try {
     const user = req.user
-    if (!user) return next(createError('Unauthorized', 401, 'UNAUTHORIZED'))
+    if (!user) return next(createError('Please sign in to continue.', 401, 'UNAUTHORIZED'))
     const id = req.params['id']
-    if (!id) return next(createError('Missing id', 400, 'BAD_REQUEST'))
+    if (!id) return next(createError('We couldn’t find what you were looking for. Please refresh the page and try again.', 400, 'BAD_REQUEST'))
     const parsed = updateSchema.safeParse(req.body)
-    if (!parsed.success) return next(createError('Invalid request body', 400))
+    if (!parsed.success) return next(createError(friendlyZodMessage(parsed.error), 400, 'VALIDATION_ERROR'))
     const current = await mattersService.getMatter(id)
     if (current.status === 'closed') {
-      return next(createError('Cannot edit a closed matter', 400, 'MATTER_CLOSED'))
+      return next(createError('This matter has already been closed and can’t be edited.', 400, 'MATTER_CLOSED'))
     }
     const after = await mattersService.updateMatter(id, parsed.data, user.id)
     res.json(after)
@@ -140,11 +141,11 @@ mattersRouter.put('/:id', requireAuth, requireRole('matters:edit'), async (req, 
 mattersRouter.post('/:id/close', requireAuth, requireRole('matters:close'), async (req, res, next) => {
   try {
     const user = req.user
-    if (!user) return next(createError('Unauthorized', 401, 'UNAUTHORIZED'))
+    if (!user) return next(createError('Please sign in to continue.', 401, 'UNAUTHORIZED'))
     const id = req.params['id']
-    if (!id) return next(createError('Missing id', 400, 'BAD_REQUEST'))
+    if (!id) return next(createError('We couldn’t find what you were looking for. Please refresh the page and try again.', 400, 'BAD_REQUEST'))
     const parsed = closeSchema.safeParse(req.body)
-    if (!parsed.success) return next(createError('Invalid request body', 400))
+    if (!parsed.success) return next(createError(friendlyZodMessage(parsed.error), 400, 'VALIDATION_ERROR'))
     const after = await mattersService.closeMatter(id, parsed.data, user.id)
     res.json(after)
   } catch (err) {

@@ -4,6 +4,7 @@ import { hasPermission } from '@hakios/types'
 import { requireAuth } from '../middleware/requireAuth.js'
 import { requireRole } from '../middleware/requireRole.js'
 import { createError } from '../middleware/errorHandler.js'
+import { friendlyZodMessage } from '../lib/friendlyError.js'
 import * as clientsService from '../services/clients.js'
 
 export const clientsRouter = Router()
@@ -37,13 +38,13 @@ const listQuerySchema = z.object({
 clientsRouter.get('/', requireAuth, async (req, res, next) => {
   try {
     const user = req.user
-    if (!user) return next(createError('Authentication required', 401, 'UNAUTHENTICATED'))
+    if (!user) return next(createError('Please sign in to continue.', 401, 'UNAUTHENTICATED'))
     const canReadAll = hasPermission(user.role, 'clients:read_all')
     if (!canReadAll && !hasPermission(user.role, 'clients:read_assigned')) {
-      return next(createError('Insufficient permissions', 403, 'FORBIDDEN'))
+      return next(createError('You don’t have permission to do this. Please contact your administrator.', 403, 'FORBIDDEN'))
     }
     const parsed = listQuerySchema.safeParse(req.query)
-    if (!parsed.success) return next(createError('Invalid query parameters', 400))
+    if (!parsed.success) return next(createError(friendlyZodMessage(parsed.error), 400, 'VALIDATION_ERROR'))
     const result = await clientsService.listClients({ ...parsed.data, userId: user.id, canReadAll })
     res.json(result)
   } catch (err) {
@@ -54,9 +55,9 @@ clientsRouter.get('/', requireAuth, async (req, res, next) => {
 clientsRouter.post('/', requireAuth, requireRole('clients:create'), async (req, res, next) => {
   try {
     const user = req.user
-    if (!user) return next(createError('Authentication required', 401, 'UNAUTHENTICATED'))
+    if (!user) return next(createError('Please sign in to continue.', 401, 'UNAUTHENTICATED'))
     const parsed = createSchema.safeParse(req.body)
-    if (!parsed.success) return next(createError('Invalid request body', 400))
+    if (!parsed.success) return next(createError(friendlyZodMessage(parsed.error), 400, 'VALIDATION_ERROR'))
     const client = await clientsService.createClient(parsed.data, user.id)
     res.status(201).json(client)
   } catch (err) {
@@ -67,18 +68,18 @@ clientsRouter.post('/', requireAuth, requireRole('clients:create'), async (req, 
 clientsRouter.get('/:id', requireAuth, async (req, res, next) => {
   try {
     const user = req.user
-    if (!user) return next(createError('Authentication required', 401, 'UNAUTHENTICATED'))
+    if (!user) return next(createError('Please sign in to continue.', 401, 'UNAUTHENTICATED'))
     const canReadAll = hasPermission(user.role, 'clients:read_all')
     const canReadAssigned = hasPermission(user.role, 'clients:read_assigned')
     if (!canReadAll && !canReadAssigned) {
-      return next(createError('Insufficient permissions', 403, 'FORBIDDEN'))
+      return next(createError('You don’t have permission to do this. Please contact your administrator.', 403, 'FORBIDDEN'))
     }
     const id = req.params['id']
-    if (!id) return next(createError('Missing id', 400, 'BAD_REQUEST'))
+    if (!id) return next(createError('We couldn’t find what you were looking for. Please refresh the page and try again.', 400, 'BAD_REQUEST'))
     const client = await clientsService.getClient(id)
     if (!canReadAll) {
       const ok = await clientsService.userCanAccessClient(user.id, client.id)
-      if (!ok) return next(createError('Insufficient permissions', 403, 'FORBIDDEN'))
+      if (!ok) return next(createError('You don’t have permission to do this. Please contact your administrator.', 403, 'FORBIDDEN'))
     }
     res.json(client)
   } catch (err) {
@@ -89,11 +90,11 @@ clientsRouter.get('/:id', requireAuth, async (req, res, next) => {
 clientsRouter.put('/:id', requireAuth, requireRole('clients:edit'), async (req, res, next) => {
   try {
     const user = req.user
-    if (!user) return next(createError('Authentication required', 401, 'UNAUTHENTICATED'))
+    if (!user) return next(createError('Please sign in to continue.', 401, 'UNAUTHENTICATED'))
     const parsed = updateSchema.safeParse(req.body)
-    if (!parsed.success) return next(createError('Invalid request body', 400))
+    if (!parsed.success) return next(createError(friendlyZodMessage(parsed.error), 400, 'VALIDATION_ERROR'))
     const id = req.params['id']
-    if (!id) return next(createError('Missing id', 400, 'BAD_REQUEST'))
+    if (!id) return next(createError('We couldn’t find what you were looking for. Please refresh the page and try again.', 400, 'BAD_REQUEST'))
     const after = await clientsService.updateClient(id, parsed.data, user.id)
     res.json(after)
   } catch (err) {

@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { db } from '../db/client.js'
 import { requireAuth } from '../middleware/requireAuth.js'
 import { createError } from '../middleware/errorHandler.js'
+import { friendlyZodMessage } from '../lib/friendlyError.js'
 
 export const pushRouter = Router()
 
@@ -17,7 +18,7 @@ const subscriptionSchema = z.object({
 pushRouter.post('/subscribe', requireAuth, async (req, res, next) => {
   try {
     const parsed = subscriptionSchema.safeParse(req.body)
-    if (!parsed.success) throw createError('Invalid subscription payload', 400)
+    if (!parsed.success) throw createError(friendlyZodMessage(parsed.error), 400, 'VALIDATION_ERROR')
 
     const { endpoint, keys } = parsed.data
     await db.query(
@@ -35,7 +36,7 @@ pushRouter.post('/subscribe', requireAuth, async (req, res, next) => {
 pushRouter.delete('/subscribe', requireAuth, async (req, res, next) => {
   try {
     const parsed = z.object({ endpoint: z.string().url() }).safeParse(req.body)
-    if (!parsed.success) throw createError('Invalid request body', 400)
+    if (!parsed.success) throw createError(friendlyZodMessage(parsed.error), 400, 'VALIDATION_ERROR')
     const { endpoint } = parsed.data
     await db.query(
       'DELETE FROM push_subscriptions WHERE user_id = $1 AND endpoint = $2',
