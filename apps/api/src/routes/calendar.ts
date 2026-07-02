@@ -45,7 +45,7 @@ calendarRouter.get('/', requireAuth, async (req, res, next) => {
     const canReadAll = hasPermission(req.user!.role, 'calendar:read_all')
     const canReadAssigned = hasPermission(req.user!.role, 'calendar:read_assigned')
     if (!canReadAll && !canReadAssigned) {
-      return next(createError("You don't have permission to do this. Please contact your administrator.", 403, 'FORBIDDEN'))
+      return next(createError('You don’t have permission to do this. Please contact your administrator.', 403, 'FORBIDDEN'))
     }
     const q = req.query as Record<string, string>
     const events = await calendarService.listEvents({
@@ -65,7 +65,7 @@ calendarRouter.get('/', requireAuth, async (req, res, next) => {
 calendarRouter.post('/', requireAuth, async (req, res, next) => {
   try {
     if (!hasPermission(req.user!.role, 'calendar:create')) {
-      return next(createError("You don't have permission to do this. Please contact your administrator.", 403, 'FORBIDDEN'))
+      return next(createError('You don’t have permission to do this. Please contact your administrator.', 403, 'FORBIDDEN'))
     }
     const result = createSchema.safeParse(req.body)
     if (!result.success) {
@@ -84,7 +84,7 @@ calendarRouter.get('/:id', requireAuth, async (req, res, next) => {
     if (!event) return next(createError('Event not found', 404, 'NOT_FOUND'))
     const canReadAll = hasPermission(req.user!.role, 'calendar:read_all')
     if (!canReadAll && !event.assigneeIds.includes(req.user!.id)) {
-      return next(createError("You don't have permission to do this. Please contact your administrator.", 403, 'FORBIDDEN'))
+      return next(createError('You don’t have permission to do this. Please contact your administrator.', 403, 'FORBIDDEN'))
     }
     res.json(event)
   } catch (err) {
@@ -95,12 +95,12 @@ calendarRouter.get('/:id', requireAuth, async (req, res, next) => {
 calendarRouter.put('/:id', requireAuth, async (req, res, next) => {
   try {
     if (!hasPermission(req.user!.role, 'calendar:create')) {
-      return next(createError("You don't have permission to do this. Please contact your administrator.", 403, 'FORBIDDEN'))
+      return next(createError('You don’t have permission to do this. Please contact your administrator.', 403, 'FORBIDDEN'))
     }
     const current = await calendarService.getEvent(req.params['id']!)
     if (!current) return next(createError('Event not found', 404, 'NOT_FOUND'))
     if (current.isResolved) {
-      return next(createError("This event has already been marked resolved and can't be edited.", 400, 'EVENT_RESOLVED'))
+      return next(createError('This event has already been marked resolved and can’t be edited.', 400, 'EVENT_RESOLVED'))
     }
     const result = updateSchema.safeParse(req.body)
     if (!result.success) {
@@ -116,7 +116,7 @@ calendarRouter.put('/:id', requireAuth, async (req, res, next) => {
 calendarRouter.patch('/:id/resolve', requireAuth, async (req, res, next) => {
   try {
     if (!hasPermission(req.user!.role, 'calendar:create')) {
-      return next(createError("You don't have permission to do this. Please contact your administrator.", 403, 'FORBIDDEN'))
+      return next(createError('You don’t have permission to do this. Please contact your administrator.', 403, 'FORBIDDEN'))
     }
     const event = await calendarService.resolveEvent(req.params['id']!)
     if (!event) return next(createError('Event not found', 404, 'NOT_FOUND'))
@@ -129,7 +129,7 @@ calendarRouter.patch('/:id/resolve', requireAuth, async (req, res, next) => {
 calendarRouter.delete('/:id', requireAuth, async (req, res, next) => {
   try {
     if (!hasPermission(req.user!.role, 'calendar:create')) {
-      return next(createError("You don't have permission to do this. Please contact your administrator.", 403, 'FORBIDDEN'))
+      return next(createError('You don’t have permission to do this. Please contact your administrator.', 403, 'FORBIDDEN'))
     }
     const deleted = await calendarService.deleteEvent(req.params['id']!)
     if (!deleted) return next(createError('Event not found', 404, 'NOT_FOUND'))
