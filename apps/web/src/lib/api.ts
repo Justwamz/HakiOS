@@ -83,8 +83,8 @@ export async function api<T = unknown>(
   const res = await fetch(`${BASE}${path}`, { ...options, headers })
 
   if (!res.ok) {
-    const body = await res.json().catch(() => ({ error: 'Unknown error' })) as { error?: string }
-    const err = new Error(body.error ?? 'Request failed') as Error & { status: number }
+    const body = await res.json().catch(() => ({ error: 'Something went wrong. Please check your connection and try again.' })) as { error?: string }
+    const err = new Error(body.error ?? 'Something went wrong. Please check your connection and try again.') as Error & { status: number }
     err.status = res.status
     throw err
   }
