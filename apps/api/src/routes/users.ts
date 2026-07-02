@@ -5,6 +5,7 @@ import { requireRole } from '../middleware/requireRole.js'
 import { db } from '../db/client.js'
 import * as authService from '../services/auth.js'
 import { createError } from '../middleware/errorHandler.js'
+import { friendlyZodMessage } from '../lib/friendlyError.js'
 import { emailSchema } from '@hakios/utils'
 import type { Role } from '@hakios/types'
 
@@ -63,7 +64,7 @@ usersRouter.post('/', requireAuth, requireRole('users:manage'), async (req, res,
     })
     const result = bodySchema.safeParse(req.body)
     if (!result.success) {
-      return next(createError(result.error.errors[0]?.message ?? 'Validation error', 400, 'VALIDATION_ERROR'))
+      return next(createError(friendlyZodMessage(result.error), 400, 'VALIDATION_ERROR'))
     }
     const { email, firstName, lastName, role } = result.data
     const user = await authService.createUser({ email, firstName, lastName, role: role as Role })
@@ -78,11 +79,11 @@ usersRouter.patch('/:id/status', requireAuth, requireRole('users:manage'), async
     const bodySchema = z.object({ isActive: z.boolean() })
     const result = bodySchema.safeParse(req.body)
     if (!result.success) {
-      return next(createError('isActive must be a boolean', 400, 'VALIDATION_ERROR'))
+      return next(createError('Something went wrong updating the status. Please try again.', 400, 'VALIDATION_ERROR'))
     }
     const { isActive } = result.data
     if (req.params['id'] === req.user!.id && !isActive) {
-      return next(createError('Cannot deactivate your own account', 400, 'BAD_REQUEST'))
+      return next(createError('You can’t deactivate your own account. Ask another admin to do this if needed.', 400, 'BAD_REQUEST'))
     }
     const { rows } = await db.query<Record<string, unknown>>(
       `UPDATE users SET is_active = $1, updated_at = now()

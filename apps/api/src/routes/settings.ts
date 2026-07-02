@@ -4,6 +4,7 @@ import { requireAuth } from '../middleware/requireAuth.js'
 import { requireRole } from '../middleware/requireRole.js'
 import { db } from '../db/client.js'
 import { createError } from '../middleware/errorHandler.js'
+import { friendlyZodMessage } from '../lib/friendlyError.js'
 import type { CaseNumberSettings, FirmProfile, MatterTypeCode, ReminderSchedule } from '@hakios/types'
 
 export const settingsRouter = Router()
@@ -41,7 +42,7 @@ settingsRouter.put('/firm', requireAuth, requireRole('settings:manage'), async (
   try {
     const result = firmSchema.safeParse(req.body)
     if (!result.success) {
-      return next(createError(result.error.errors[0]?.message ?? 'Validation error', 400, 'VALIDATION_ERROR'))
+      return next(createError(friendlyZodMessage(result.error), 400, 'VALIDATION_ERROR'))
     }
     await db.query(
       `INSERT INTO settings (key, value, updated_by, updated_at)
@@ -67,7 +68,7 @@ settingsRouter.put('/case-number', requireAuth, requireRole('settings:manage'), 
   try {
     const result = caseNumberSchema.safeParse(req.body)
     if (!result.success) {
-      return next(createError(result.error.errors[0]?.message ?? 'Validation error', 400, 'VALIDATION_ERROR'))
+      return next(createError(friendlyZodMessage(result.error), 400, 'VALIDATION_ERROR'))
     }
     await db.query(
       `INSERT INTO settings (key, value, updated_by, updated_at)
@@ -100,7 +101,7 @@ settingsRouter.get('/matter-types', requireAuth, async (_req, res, next) => {
 })
 
 const matterTypeSchema = z.object({
-  code: z.string().min(1).max(20).regex(/^[A-Z0-9_]+$/, 'Code must be uppercase letters, digits, or underscores'),
+  code: z.string().min(1).max(20).regex(/^[A-Z0-9_]+$/, 'The matter type code can only use capital letters, numbers, and underscores (e.g. LIT_2024).'),
   label: z.string().min(1).max(100),
 })
 
@@ -108,7 +109,7 @@ settingsRouter.post('/matter-types', requireAuth, requireRole('settings:manage')
   try {
     const result = matterTypeSchema.safeParse(req.body)
     if (!result.success) {
-      return next(createError(result.error.errors[0]?.message ?? 'Validation error', 400, 'VALIDATION_ERROR'))
+      return next(createError(friendlyZodMessage(result.error), 400, 'VALIDATION_ERROR'))
     }
     const { code, label } = result.data
     const { rows } = await db.query<Record<string, unknown>>(
@@ -193,7 +194,7 @@ settingsRouter.post('/reminder-schedules', requireAuth, requireRole('settings:ma
     const result = reminderScheduleSchema.safeParse(req.body)
     if (!result.success) {
       return next(
-        createError(result.error.errors[0]?.message ?? 'Validation error', 400, 'VALIDATION_ERROR'),
+        createError(friendlyZodMessage(result.error), 400, 'VALIDATION_ERROR'),
       )
     }
     const { rows } = await db.query<Record<string, unknown>>(
