@@ -77,10 +77,10 @@ export function MatterDetailPage() {
           </div>
         }
       />
-      <div className="p-8 max-w-3xl space-y-8">
+      <div className="p-4 md:p-8 max-w-3xl space-y-8">
         <section>
           <h2 className="text-xs font-semibold text-text-secondary uppercase tracking-wide mb-4">Overview</h2>
-          <dl className="grid grid-cols-2 gap-x-8 gap-y-4">
+          <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-4 md:gap-x-8 gap-y-4">
             <div className="col-span-2">
               <dt className="text-xs text-text-muted">Description</dt>
               <dd className="text-sm text-text-primary mt-0.5">{matter.description}</dd>
@@ -93,7 +93,7 @@ export function MatterDetailPage() {
 
         <section>
           <h2 className="text-xs font-semibold text-text-secondary uppercase tracking-wide mb-4">Assignments</h2>
-          <dl className="grid grid-cols-2 gap-x-8 gap-y-4">
+          <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-4 md:gap-x-8 gap-y-4">
             <Row label="Lead Advocate" value={matter.leadAdvocateName} />
             <Row label="Supervising Partner" value={matter.supervisingPartnerName} />
             <div>
@@ -108,7 +108,7 @@ export function MatterDetailPage() {
         {(matter.opposingParty || matter.courtName) && (
           <section>
             <h2 className="text-xs font-semibold text-text-secondary uppercase tracking-wide mb-4">Court Details</h2>
-            <dl className="grid grid-cols-2 gap-x-8 gap-y-4">
+            <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-4 md:gap-x-8 gap-y-4">
               <Row label="Opposing Party" value={matter.opposingParty} />
               <Row label="Opposing Advocate" value={matter.opposingAdvocate} />
               <Row label="Court Name" value={matter.courtName} />
@@ -123,7 +123,7 @@ export function MatterDetailPage() {
         {(matter.nextAction || matter.nextActionDue) && (
           <section>
             <h2 className="text-xs font-semibold text-text-secondary uppercase tracking-wide mb-4">Next Action</h2>
-            <dl className="grid grid-cols-2 gap-x-8 gap-y-4">
+            <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-4 md:gap-x-8 gap-y-4">
               <div className="col-span-2">
                 <Row label="Action" value={matter.nextAction} />
               </div>

@@ -83,7 +83,7 @@ export function CreateMatterPage() {
   return (
     <div>
       <PageHeader title="New Matter" />
-      <div className="p-8 max-w-2xl">
+      <div className="p-4 md:p-8 max-w-2xl">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
           <div>
             <label className={LABEL_CLASS}>Client *</label>
@@ -113,7 +113,7 @@ export function CreateMatterPage() {
             {errors.description && <p className="mt-1 text-xs text-status-overdue">{errors.description.message}</p>}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className={LABEL_CLASS}>Lead Advocate</label>
               <select {...register('leadAdvocateId')} className={INPUT_CLASS}>
@@ -171,7 +171,7 @@ export function CreateMatterPage() {
 
           <div className="border-t border-border pt-5">
             <p className="text-sm font-medium text-text-secondary mb-4">Court details (optional)</p>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className={LABEL_CLASS}>Opposing party</label>
                 <input {...register('opposingParty')} className={INPUT_CLASS} />
@@ -205,7 +205,7 @@ export function CreateMatterPage() {
 
           <div className="border-t border-border pt-5">
             <p className="text-sm font-medium text-text-secondary mb-4">Next action</p>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="col-span-2">
                 <label className={LABEL_CLASS}>Action description</label>
                 <input {...register('nextAction')} className={INPUT_CLASS} />

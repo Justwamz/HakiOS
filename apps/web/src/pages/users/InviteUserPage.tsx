@@ -51,7 +51,7 @@ export function InviteUserPage() {
     return (
       <div>
         <PageHeader title="Invite User" />
-        <div className="p-8 max-w-lg">
+        <div className="p-4 md:p-8 max-w-lg">
           <div className="bg-status-active-bg text-status-active-text rounded-lg p-4 text-sm mb-4">
             Invite sent. The user will receive an email with a link to set their password.
           </div>
@@ -73,7 +73,7 @@ export function InviteUserPage() {
       <PageHeader title="Invite User" />
       <div className="p-8 max-w-lg">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className={LABEL_CLASS}>First name *</label>
               <input {...register('firstName')} className={INPUT_CLASS} />

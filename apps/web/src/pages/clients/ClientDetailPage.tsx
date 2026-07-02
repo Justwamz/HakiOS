@@ -52,10 +52,10 @@ export function ClientDetailPage() {
           </div>
         }
       />
-      <div className="p-8 max-w-3xl space-y-8">
+      <div className="p-4 md:p-8 max-w-3xl space-y-8">
         <section>
           <h2 className="text-xs font-semibold text-text-secondary uppercase tracking-wide mb-4">Identity</h2>
-          <dl className="grid grid-cols-2 gap-x-8 gap-y-4">
+          <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-4 md:gap-x-8 gap-y-4">
             <div>
               <dt className="text-xs text-text-muted">Client ID</dt>
               <dd className="font-mono text-sm text-text-primary mt-0.5">{client.clientId}</dd>
@@ -72,7 +72,7 @@ export function ClientDetailPage() {
 
         <section>
           <h2 className="text-xs font-semibold text-text-secondary uppercase tracking-wide mb-4">Contact</h2>
-          <dl className="grid grid-cols-2 gap-x-8 gap-y-4">
+          <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-4 md:gap-x-8 gap-y-4">
             <DetailRow label="Phone" value={client.phone} />
             <DetailRow label="Email" value={client.email} />
             <div className="col-span-2">

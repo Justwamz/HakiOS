@@ -62,10 +62,10 @@ export function UsersPage() {
           </Link>
         }
       />
-      <div className="p-8">
+      <div className="p-4 md:p-8">
         {error && <p className="text-sm text-status-overdue mb-4">{error}</p>}
         <div className="bg-surface rounded-xl border border-border overflow-hidden">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto"><table className="w-full text-sm">
             <thead className="bg-background border-b border-border">
               <tr>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-text-secondary uppercase tracking-wide">Name</th>
@@ -103,7 +103,7 @@ export function UsersPage() {
                 </tr>
               )}
             </tbody>
-          </table>
+          </table></div>
         </div>
       </div>
     </div>

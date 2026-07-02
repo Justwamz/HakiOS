@@ -87,7 +87,7 @@ export function CalendarEventDetailPage() {
         }
       />
 
-      <div className="p-8 max-w-2xl space-y-6">
+      <div className="p-4 md:p-8 max-w-2xl space-y-6">
         {/* Status row */}
         <div className="flex items-center gap-3">
           <EventTypeBadge type={event.eventType} />

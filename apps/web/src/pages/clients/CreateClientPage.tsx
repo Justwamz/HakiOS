@@ -54,7 +54,7 @@ export function CreateClientPage() {
   return (
     <div>
       <PageHeader title="New Client" />
-      <div className="p-8 max-w-2xl">
+      <div className="p-4 md:p-8 max-w-2xl">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
           <div>
             <p className={LABEL_CLASS}>Client type</p>
@@ -90,7 +90,7 @@ export function CreateClientPage() {
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className={LABEL_CLASS}>Phone</label>
               <input {...register('phone')} className={INPUT_CLASS} />

@@ -196,7 +196,7 @@ export function SettingsPage() {
   return (
     <div>
       <PageHeader title="Settings" />
-      <div className="p-8 max-w-2xl space-y-10">
+      <div className="p-4 md:p-8 max-w-2xl space-y-10">
 
         {/* Firm Profile */}
         <section>
@@ -211,7 +211,7 @@ export function SettingsPage() {
               <label className={LABEL_CLASS}>Address</label>
               <textarea {...firmForm.register('address')} rows={2} className={INPUT_CLASS} />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className={LABEL_CLASS}>Phone</label>
                 <input {...firmForm.register('phone')} className={INPUT_CLASS} />
@@ -242,7 +242,7 @@ export function SettingsPage() {
           <h2 className="text-sm font-semibold text-text-primary mb-4">Case Number Format</h2>
           {caseSaveError && <p className="text-sm text-status-overdue mb-4">{caseSaveError}</p>}
           <form onSubmit={caseForm.handleSubmit(onCaseSubmit)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className={LABEL_CLASS}>Firm prefix (max 6 chars)</label>
                 <input {...caseForm.register('firmPrefix')} className={INPUT_CLASS} />
@@ -295,7 +295,7 @@ export function SettingsPage() {
           <h2 className="text-sm font-semibold text-text-primary mb-4">Matter Types</h2>
           {typeError && <p className="text-sm text-status-overdue mb-3">{typeError}</p>}
           <div className="bg-surface rounded-xl border border-border overflow-hidden mb-5">
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto"><table className="w-full text-sm">
               <thead className="bg-background border-b border-border">
                 <tr>
                   <th className="text-left px-4 py-2 text-xs font-semibold text-text-secondary uppercase tracking-wide">Code</th>
@@ -326,7 +326,7 @@ export function SettingsPage() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </table></div>
           </div>
           <form onSubmit={typeForm.handleSubmit(onTypeSubmit)} className="flex gap-3 items-end">
             <div className="w-28">
@@ -390,7 +390,7 @@ export function SettingsPage() {
                 </ul>
               )}
 
-              <form onSubmit={handleAddSchedule} className="flex items-end gap-3">
+              <form onSubmit={handleAddSchedule} className="flex flex-col sm:flex-row sm:items-end gap-3">
                 <div>
                   <label className="block text-xs font-medium text-text-muted mb-1">Event Type</label>
                   <select

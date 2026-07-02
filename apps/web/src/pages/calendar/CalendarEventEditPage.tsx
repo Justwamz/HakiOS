@@ -130,7 +130,7 @@ export function CalendarEventEditPage() {
     <div>
       <PageHeader title="Edit Event" />
 
-      <div className="p-8 max-w-2xl">
+      <div className="p-4 md:p-8 max-w-2xl">
         {submitError && (
           <p className="text-status-overdue text-sm mb-4">{submitError}</p>
         )}
@@ -167,7 +167,7 @@ export function CalendarEventEditPage() {
           </div>
 
           {/* Date + Time */}
-          <div className="flex gap-4">
+          <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <label className={LABEL_CLASS}>Date *</label>
               <input type="date" {...register('date')} className={INPUT_CLASS} />
@@ -175,7 +175,7 @@ export function CalendarEventEditPage() {
                 <p className={ERROR_CLASS}>{errors.date.message}</p>
               )}
             </div>
-            <div className="w-40">
+            <div className="w-full sm:w-40">
               <label className={LABEL_CLASS}>Time (optional)</label>
               <input type="time" {...register('time')} className={INPUT_CLASS} />
             </div>
@@ -204,7 +204,7 @@ export function CalendarEventEditPage() {
           {/* Assignees */}
           <div>
             <label className={LABEL_CLASS}>Assignees</label>
-            <div className="grid grid-cols-2 gap-2 mt-1 border border-border rounded-lg p-3 max-h-48 overflow-y-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1 border border-border rounded-lg p-3 max-h-48 overflow-y-auto">
               {assignableUsers.map((u) => (
                 <label
                   key={u.id}

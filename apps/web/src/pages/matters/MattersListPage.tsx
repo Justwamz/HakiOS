@@ -53,14 +53,14 @@ export function MattersListPage() {
           </Link>
         }
       />
-      <div className="p-8">
+      <div className="p-4 md:p-8">
         <div className="flex gap-3 mb-6">
           <input
             type="search"
             placeholder="Search by matter number or description…"
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1) }}
-            className="border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary w-72"
+            className="border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary w-full sm:w-72"
           />
           <select
             value={status}
@@ -81,7 +81,7 @@ export function MattersListPage() {
         ) : (
           <>
             <div className="bg-surface border border-border rounded-xl overflow-hidden">
-              <table className="w-full text-sm">
+              <div className="overflow-x-auto"><table className="w-full text-sm">
                 <thead className="bg-background border-b border-border">
                   <tr>
                     <th className="text-left px-4 py-3 font-medium text-text-secondary">Matter No.</th>
@@ -112,10 +112,10 @@ export function MattersListPage() {
                     ))
                   )}
                 </tbody>
-              </table>
+              </table></div>
             </div>
             {totalPages > 1 && (
-              <div className="flex items-center justify-between mt-4">
+              <div className="flex flex-wrap items-center justify-between gap-y-2 mt-4">
                 <p className="text-sm text-text-muted">{data.total} matter{data.total !== 1 ? 's' : ''}</p>
                 <div className="flex gap-2">
                   <button disabled={page === 1} onClick={() => setPage((p) => p - 1)} className="px-3 py-1.5 text-sm border border-border rounded-lg disabled:opacity-40">Previous</button>
