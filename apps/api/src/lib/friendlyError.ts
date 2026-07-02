@@ -25,7 +25,7 @@ export function friendlyZodMessage(error: ZodError): string {
   if (!issue) return 'Please check what you entered and try again.'
 
   const fieldKey = issue.path.length > 0 ? String(issue.path[0]) : null
-  const field = fieldKey ? (FIELD_LABELS[fieldKey] ?? fieldKey) : null
+  const field = fieldKey ? FIELD_LABELS[fieldKey] : undefined
 
   if (issue.code === 'invalid_string' && 'validation' in issue && issue.validation === 'email') {
     return 'Please enter a valid email address.'

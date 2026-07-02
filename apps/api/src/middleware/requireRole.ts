@@ -10,7 +10,7 @@ export function requireRole(...permissions: Permission[]) {
     }
     const allowed = permissions.every((p) => hasPermission(req.user!.role, p))
     if (!allowed) {
-      return next(createError('You don\'t have permission to do this. Please contact your administrator.', 403, 'FORBIDDEN'))
+      return next(createError('You don’t have permission to do this. Please contact your administrator.', 403, 'FORBIDDEN'))
     }
     next()
   }

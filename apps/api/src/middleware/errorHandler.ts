@@ -24,7 +24,7 @@ export function errorHandler(
 }
 
 export function notFound(_req: Request, res: Response): void {
-  res.status(404).json({ error: 'We couldn\'t find what you were looking for. Please refresh the page and try again.' })
+  res.status(404).json({ error: 'We couldn’t find what you were looking for. Please refresh the page and try again.' })
 }
 
 export function createError(message: string, statusCode: number, code?: string): AppError {

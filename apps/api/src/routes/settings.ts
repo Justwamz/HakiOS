@@ -136,7 +136,7 @@ settingsRouter.patch('/matter-types/:code', requireAuth, requireRole('settings:m
   try {
     const bodyResult = z.object({ isActive: z.boolean() }).safeParse(req.body)
     if (!bodyResult.success) {
-      return next(createError('isActive must be a boolean', 400, 'VALIDATION_ERROR'))
+      return next(createError('Something went wrong updating the status. Please try again.', 400, 'VALIDATION_ERROR'))
     }
     const { rows } = await db.query<Record<string, unknown>>(
       `UPDATE matter_type_codes SET is_active = $1
